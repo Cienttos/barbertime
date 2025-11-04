@@ -48,11 +48,9 @@ export default function AppointmentDetailModal({
 
   const handleUpdateStatus = async (newStatus) => {
     try {
-      await api.put(
-        `/api/appointments/${appointment.id}/status`,
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${session.access_token}` } }
-      );
+      await api.put(`/api/appointments/${appointment.id}/status`, {
+        status: newStatus,
+      });
       Alert.alert("Éxito", `La cita ha sido marcada como ${newStatus}.`);
       onAppointmentUpdate();
       onClose();
@@ -83,11 +81,9 @@ export default function AppointmentDetailModal({
           style: "destructive",
           onPress: async () => {
             try {
-              await api.put(
-                `/api/appointments/${appointment.id}/status`,
-                { status: "Cancelado" },
-                { headers: { Authorization: `Bearer ${session.access_token}` } }
-              );
+              await api.put(`/api/appointments/${appointment.id}/status`, {
+                status: "Cancelado",
+              });
               Alert.alert("Éxito", "Turno cancelado.");
               onAppointmentUpdate();
               onClose();

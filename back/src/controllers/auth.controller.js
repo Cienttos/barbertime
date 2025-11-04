@@ -103,55 +103,13 @@ export const login = async (req, res) => {
     );
     const user = signInData.user;
 
-    // Fetch the user's profile
-    console.log("🔄 [Backend] Buscando/creando perfil para User ID:", user.id);
-    let { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    // If profile doesn't exist, create it
-    if (profileError && profileError.code === "PGRST116") {
-      console.warn(
-        `⚠️ [Backend] Perfil no encontrado para el usuario ${user.id}. Creando uno.`
-      );
-      const { data: newProfile, error: createError } = await supabaseAdmin
-        .from("profiles")
-        .upsert(
-          {
-            id: user.id,
-            role: "client",
-            full_name: user.email.split("@")[0],
-            avatar_url: "https://www.gravatar.com/avatar/?d=mp",
-          },
-          { onConflict: "id" }
-        )
-        .select()
-        .single();
-
-      if (createError) {
-        console.error(
-          "❌ [Backend] Error creando perfil de usuario en login:",
-          createError.message
-        );
-        // Still return session, frontend will handle incomplete profile
-      } else {
-        console.log("✅ [Backend] Perfil creado exitosamente en login.");
-        profile = newProfile;
-      }
-    } else if (profileError) {
-      console.error(
-        "❌ [Backend] Error obteniendo perfil de usuario:",
-        profileError.message
-      );
-    }
-
-    console.log("✅ [Backend] Login exitoso. Enviando sesión y perfil.");
+    // Ya no se busca ni se crea el perfil aquí.
+    // El frontend se encargará de llamar a /api/auth/sync para esa tarea.
+    // Esto unifica el flujo con el login de Google.
+    console.log("✅ [Backend] Login exitoso. Enviando solo la sesión.");
     res.status(200).json({
       message: "Login successful",
       session: signInData.session,
-      profile,
     });
   } catch (error) {
     console.error("💥 Server error during login:", error.message);
@@ -254,6 +212,8 @@ export const googleSignIn = async (req, res) => {
 };
 
 export const syncProfile = async (req, res) => {
+  console.log("➡️ [Backend] Petición de syncProfile recibida.");
+
   try {
     // La validación del token se hace aquí, no en un middleware
     const authHeader = req.headers.authorization;
@@ -272,19 +232,41 @@ export const syncProfile = async (req, res) => {
     } = await supabaseAdmin.auth.getUser(token);
 
     if (userError) {
+      console.error(
+        "❌ [Backend] Error al obtener usuario desde token en syncProfile:",
+        userError.message
+      );
       return res
         .status(401)
         .json({ error: "Invalid token", details: userError.message });
     }
 
     if (!user) {
+      console.error(
+        "❌ [Backend] No se encontró usuario para el token en syncProfile."
+      );
       return res.status(401).json({ error: "User not authenticated" });
     }
 
+    // **CRUCIAL FIX**: Create a new Supabase admin client instance for this request.
+    // This ensures the client is isolated from any user context and bypasses RLS.
+    // Using dynamic import to ensure 'createClient' is available.
+    const { createClient: createSupabaseClient } = await import(
+      "@supabase/supabase-js"
+    );
+    const supabaseAdminFresh = createSupabaseClient(
+      process.env.SUPABASE_URL, // Supabase project URL
+      process.env.SUPABASE_SERVICE_ROLE_KEY, // Supabase service role key (admin privileges)
+      {
+        // Options for the client
+        auth: { persistSession: false, autoRefreshToken: false }, // Do not persist session or auto-refresh for admin client
+      } // End of options object
+    ); // End of createSupabaseClient call
+    console.log(`✅ [Backend] Token validado para usuario: ${user.id}`);
     // Obtenemos el perfil existente para no sobreescribir datos importantes
     // Se modifica la consulta para que no lance un error si no encuentra el perfil.
     const { data: existingProfile, error: profileFetchError } =
-      await supabaseAdmin
+      await supabaseAdminFresh // Use the fresh client here
         .from("profiles")
         .select("*")
         .eq("id", user.id)
@@ -293,6 +275,10 @@ export const syncProfile = async (req, res) => {
     // Ignoramos el error específico 'PGRST116' que significa "cero filas encontradas",
     // ya que es un caso esperado para usuarios nuevos.
     if (profileFetchError && profileFetchError.code !== "PGRST116") {
+      console.error(
+        "❌ [Backend] Error al buscar perfil existente en syncProfile:",
+        profileFetchError.message
+      );
       throw profileFetchError; // Lanzamos cualquier otro error de base de datos.
     }
 
@@ -346,7 +332,7 @@ export const syncProfile = async (req, res) => {
       role: existingProfile?.role || "client",
     };
 
-    const { data: profile, error: profileError } = await supabaseAdmin
+    const { data: profile, error: profileError } = await supabaseAdminFresh // Use the fresh client here
       .from("profiles")
       .upsert(profileData, { onConflict: "id" })
       .select()
@@ -360,6 +346,9 @@ export const syncProfile = async (req, res) => {
       return res.status(500).json({ error: "Failed to sync profile" });
     }
 
+    console.log(
+      `✅ [Backend] Perfil sincronizado exitosamente para usuario: ${user.id}`
+    );
     return res
       .status(200)
       .json({ message: "Profile synced successfully", profile });
@@ -373,6 +362,7 @@ export const syncProfile = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
+  console.log("➡️ [Backend] Petición de logout recibida.");
   try {
     const { error } = await supabaseAdmin.auth.signOut();
 
@@ -381,6 +371,7 @@ export const logout = async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
+    console.log("✅ [Backend] Logout exitoso.");
     res.status(200).json({ message: "Logout successful" });
   } catch (error) {
     console.error("💥 Server error during logout:", error.message);

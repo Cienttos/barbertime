@@ -10,10 +10,34 @@ export default function UserProfile() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      Alert.alert("Error", "No se pudo cerrar la sesión.");
-    } else {
+    console.log("➡️ [Logout] Iniciando proceso de cierre de sesión...");
+    try {
+      // 2. Llama a Supabase para invalidar la sesión en el cliente.
+      // Esto elimina el token de AsyncStorage.
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        setProfile(null);
+        setSession(null);
+        console.log("✅ [Logout] Estado local (Zustand) limpiado.");
+
+        console.error("❌ [Logout] Error en supabase.auth.signOut():", error);
+      } else {
+        console.log(
+          "✅ [Logout] Sesión de Supabase en cliente cerrada exitosamente."
+        );
+      }
+
+      // 1. Limpia el estado local en Zustand PRIMERO.
+      // Esto asegura que cualquier re-renderización ya no vea la sesión/perfil.
+      setProfile(null);
+      setSession(null);
+      // 3. Redirige al usuario a la pantalla de login.
+      router.replace("/(auth)/login");
+      console.log("✅ [Logout] Redirección a /login completada.");
+    } catch (e) {
+      console.error("💥 [Logout] Error catastrófico durante el logout:", e);
+      Alert.alert("Error", "Ocurrió un error al cerrar sesión.");
+      // Intento de recuperación forzando la limpieza y redirección
       setSession(null);
       setProfile(null);
       router.replace("/(auth)/login");
@@ -54,9 +78,9 @@ export default function UserProfile() {
         <Ionicons name="chevron-forward-outline" size={24} color="#9ca3af" />
       </Pressable>
 
-      <Pressable onPress={handleLogout} style={styles.logoutButton}>
-        <Ionicons name="log-out-outline" size={22} color="#ef4444" />
-        <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
+      <Pressable style={styles.logoutButton} onPress={handleLogout}>
+        <Ionicons name="log-out-outline" size={22} color="white" />
+        <Text style={styles.logoutText}>Cerrar Sesión</Text>
       </Pressable>
     </View>
   );
@@ -118,17 +142,23 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     flexDirection: "row",
+    backgroundColor: "#e63946",
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
-    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
     marginTop: 32,
-    backgroundColor: "#fee2e2",
   },
-  logoutButtonText: {
-    color: "#ef4444",
+  logoutText: {
+    color: "white",
     fontSize: 18,
     fontWeight: "600",
-    marginLeft: 8,
+    marginLeft: 10,
   },
 });

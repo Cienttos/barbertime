@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Text,
 } from "react-native";
+import { useFocusEffect } from "expo-router";
 import Header from "../../components/client/Header";
 import ReserveButton from "../../components/client/ReserveButton";
 import WorkingHours from "../../components/client/WorkingHours";
@@ -13,6 +14,7 @@ import Barbers from "../../components/client/Barbers";
 import Services from "../../components/client/Services";
 import SocialMedia from "../../components/client/SocialMedia";
 import api from "../../utils/api";
+import { useCallback } from "react";
 
 export default function ClientDashboard() {
   const [shopData, setShopData] = useState({
@@ -22,30 +24,31 @@ export default function ClientDashboard() {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchShopData = async () => {
-      setLoading(true);
-      try {
-        // Hacemos las llamadas a los endpoints públicos en paralelo
-        const [settingsRes, barbersRes, servicesRes] = await Promise.all([
-          api.get("/api/public/shop-info"),
-          api.get("/api/public/barbers"),
-          api.get("/api/public/services"),
-        ]);
-        setShopData({
-          shopSettings: settingsRes.data,
-          barbers: barbersRes.data,
-          services: servicesRes.data,
-        });
-      } catch (error) {
-        console.error("Error fetching shop data for client:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchShopData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchShopData = async () => {
+        setLoading(true);
+        try {
+          // Hacemos las llamadas a los endpoints públicos en paralelo
+          const [settingsRes, barbersRes, servicesRes] = await Promise.all([
+            api.get("/api/public/shop-info"),
+            api.get("/api/public/barbers"),
+            api.get("/api/public/services"),
+          ]);
+          setShopData({
+            shopSettings: settingsRes.data,
+            barbers: barbersRes.data,
+            services: servicesRes.data,
+          });
+        } catch (error) {
+          console.error("Error fetching shop data for client:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchShopData();
+    }, [])
+  );
 
   if (loading) {
     return (

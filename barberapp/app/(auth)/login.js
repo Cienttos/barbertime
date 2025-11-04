@@ -54,11 +54,7 @@ export default function Login() {
         // Sincronizar perfil con el backend después de un login de Google
         try {
           const syncResponse = await api.post(
-            "/api/auth/sync", // La ruta correcta es /api/auth/sync
-            {},
-            {
-              headers: { Authorization: `Bearer ${access_token}` },
-            }
+            "/api/auth/sync" // El interceptor de Axios se encarga del token
           );
 
           // Axios usa `status` en lugar de `ok`. Un 200 o 201 es éxito.
@@ -161,24 +157,36 @@ export default function Login() {
       const result = await response.json();
 
       if (response.ok && result.session) {
-        // El backend nos devuelve la sesión Y el perfil.
-        const { error } = await supabase.auth.setSession(result.session);
-        if (error) throw error;
-
-        // ✅ GUARDAMOS AMBOS EN EL STORE (PERFIL PRIMERO)
-        // Es crucial establecer el perfil ANTES que la sesión para evitar
-        // condiciones de carrera en la navegación.
-        setProfile(result.profile);
-        setSession(result.session);
-
         console.log(
-          `✅ [Login] Sesión y Perfil establecidos desde backend. Rol: ${
-            result.profile?.role || "no definido"
-          }`
+          "✅ [Login] Backend devolvió sesión de email exitosamente."
         );
-        // La navegación se maneja aquí para asegurar la redirección inmediata
-        // después de un login exitoso desde esta pantalla.
-        const role = result.profile?.role;
+
+        // 1. Establecemos la sesión en el cliente de Supabase
+        const { error } = await supabase.auth.setSession(result.session);
+        if (error) {
+          console.error(
+            "❌ [Login] Error al establecer sesión de Supabase en el cliente:",
+            error
+          );
+          throw error;
+        }
+
+        // 2. Sincronizamos el perfil (el interceptor de Axios ya tiene el token correcto)
+        const syncResponse = await api.post("/api/auth/sync");
+        if (syncResponse.status < 200 || syncResponse.status >= 300) {
+          throw new Error("Fallo al sincronizar el perfil después del login.");
+        }
+        const profile = syncResponse.data.profile;
+
+        // 3. Guardamos todo en el store
+        setProfile(profile);
+        setSession(result.session);
+        console.log(
+          `✅ [Login] Sesión y Perfil de Email establecidos. Rol: ${profile?.role}`
+        );
+
+        // 4. Redirigimos
+        const role = profile?.role;
         if (role === "admin") {
           router.replace("/(admin)/AdminDashboard");
         } else if (role === "barber") {
@@ -187,6 +195,9 @@ export default function Login() {
           router.replace("/(client)/ClientDashboard");
         }
       } else {
+        console.warn(
+          `⚠️ [Login] El backend respondió con un error: ${result.error}`
+        );
         Alert.alert("Error", result.error || "Error al iniciar sesión.");
       }
     } catch (error) {

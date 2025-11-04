@@ -112,9 +112,11 @@ export default function BookAppointmentScreen() {
   };
 
   useEffect(() => {
-    if (session) {
-      fetchData();
-    }
+    // Usamos useFocusEffect para reiniciar el estado si el usuario vuelve a esta pantalla
+    const unsubscribe = router.addListener("focus", () => {
+      resetBookingState();
+    });
+    return unsubscribe;
   }, [session]);
 
   useEffect(() => {
@@ -218,17 +220,13 @@ export default function BookAppointmentScreen() {
       };
       console.log("[Booking] 📦 Enviando datos de reserva:", bookingData);
 
-      await api.post(
-        "/api/appointments",
-        {
-          barber_id: selectedBarber.id,
-          service_id: selectedService.id,
-          appointment_date: appointmentDate,
-          start_time: startTime,
-          end_time: endTime,
-        },
-        { headers: { Authorization: `Bearer ${session.access_token}` } }
-      );
+      await api.post("/api/appointments", {
+        barber_id: selectedBarber.id,
+        service_id: selectedService.id,
+        appointment_date: appointmentDate,
+        start_time: startTime,
+        end_time: endTime,
+      });
 
       Alert.alert("¡Éxito!", "Tu cita ha sido reservada correctamente.", [
         {

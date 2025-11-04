@@ -15,7 +15,7 @@ import {
 import { useSessionStore } from "../../store/sessionStore";
 import api from "../../utils/api";
 import { Ionicons } from "@expo/vector-icons";
-import AppointmentDetailModal from "../../components/AppointmentDetailModal"; // Now correctly imported
+import AppointmentDetailModal from "../../components/AppointmentDetailModal";
 import RatingModal from "../../components/RatingModal"; // Import the new RatingModal
 import { useRouter } from "expo-router";
 import { DateTime } from "luxon";
@@ -35,12 +35,6 @@ export default function AppointmentsScreen() {
 
   const { profile } = useSessionStore();
 
-  useEffect(() => {
-    if (session) {
-      fetchAppointments();
-    }
-  }, [session]);
-
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
     // Si es admin, busca todos los turnos. Si no, solo los del cliente.
@@ -49,11 +43,7 @@ export default function AppointmentsScreen() {
         ? "/api/admin/appointments" // Corrected to include /api prefix
         : "/api/appointments/client"; // Corrected to include /api prefix
     try {
-      const response = await api.get(endpoint, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      const response = await api.get(endpoint);
       setAppointments(response.data);
     } catch (error) {
       Alert.alert("Error", "No se pudieron cargar tus citas.");
@@ -61,6 +51,14 @@ export default function AppointmentsScreen() {
       setLoading(false);
     }
   }, [session, profile]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (session) {
+        fetchAppointments();
+      }
+    }, [session, fetchAppointments])
+  );
 
   const filteredAppointments = useMemo(() => {
     let filtered = appointments;
@@ -104,10 +102,7 @@ export default function AppointmentsScreen() {
     if (!selectedAppointment) return;
     try {
       await api.put(
-        // This was missing /api prefix
-        `/api/appointments/${selectedAppointment.id}/notes`,
-        { rating, review_comment: comment },
-        { headers: { Authorization: `Bearer ${session.access_token}` } }
+        `/api/appointments/${selectedAppointment.id}/notes`, { rating, review_comment: comment }
       );
       Alert.alert("Éxito", "Gracias por tu calificación.");
       setIsRatingVisible(false);

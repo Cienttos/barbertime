@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import api from '../utils/api';
-import { useSessionStore } from '../store/sessionStore';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import api from "../utils/api";
+import { useSessionStore } from "../store/sessionStore";
+import { Ionicons } from "@expo/vector-icons";
 
 const UserStats = ({ userId }) => {
   const { session } = useSessionStore();
@@ -13,13 +13,11 @@ const UserStats = ({ userId }) => {
     const fetchStats = async () => {
       if (!session) return;
       try {
-        const url = userId ? `/stats/user/${userId}` : '/stats/user';
-        const { data } = await api.get(url, {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
+        const url = userId ? `/stats/user/${userId}` : "/stats/user";
+        const { data } = await api.get(url);
         setStats(data);
       } catch (error) {
-        console.error('Error fetching user stats:', error);
+        console.error("Error fetching user stats:", error);
       }
       setLoading(false);
     };
@@ -58,7 +56,9 @@ const UserStats = ({ userId }) => {
           <View style={styles.statCardFull}>
             <Ionicons name="heart" size={32} color="#e63946" />
             <Text style={styles.statValue}>{stats.mostUsedBarber.name}</Text>
-            <Text style={styles.statLabel}>Favorite Barber ({stats.mostUsedBarber.appointments} appointments)</Text>
+            <Text style={styles.statLabel}>
+              Favorite Barber ({stats.mostUsedBarber.appointments} appointments)
+            </Text>
           </View>
         )}
       </View>
@@ -70,9 +70,9 @@ const styles = StyleSheet.create({
   container: {
     marginTop: 20,
     padding: 16,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -80,43 +80,43 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-around",
   },
   statCard: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f8f9fa',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f8f9fa",
     borderRadius: 12,
     padding: 16,
-    width: '30%',
+    width: "30%",
     marginBottom: 16,
   },
   statCardFull: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f8f9fa',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f8f9fa",
     borderRadius: 12,
     padding: 16,
-    width: '95%',
+    width: "95%",
     marginBottom: 16,
   },
   statValue: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 8,
   },
   statLabel: {
     fontSize: 14,
-    color: '#6c757d',
+    color: "#6c757d",
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
 
