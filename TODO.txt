@@ -1,0 +1,163 @@
+# Plan de Desarrollo para BarberApp
+
+Este documento describe los pasos a seguir para construir el backend y el frontend de la aplicación, basándose en el esquema de base de datos de Supabase ya implementado.
+
+---
+
+## Parte 1: Backend (Directorio `back/`)
+
+El backend se encargará de la lógica de negocio y la interacción con la base de datos de Supabase.
+
+### 1. Configuración Inicial y Conexión a Supabase
+*   Asegurar que `supabaseClient.js` esté configurado correctamente con las credenciales de Supabase (URL y `anon_key`).
+*   Verificar que `server.js` inicialice Express y cargue las rutas.
+
+### 2. Implementación de Controladores y Rutas
+
+#### 2.1. Autenticación (authController.js, authRoutes.js) - HECHO
+*   **Registro de Usuarios:**
+    *   Implementar endpoint para registro de clientes (email/contraseña).
+    *   Implementar endpoint para registro con Google (si se usa OAuth).
+    *   Asegurar que al registrarse, se cree automáticamente un perfil en la tabla `profiles` con `role = 'user'` (esto ya lo maneja el trigger SQL).
+*   **Login de Usuarios:**
+    *   Implementar endpoint para login.
+    *   Manejar la sesión del usuario (JWT).
+*   **Logout de Usuarios:**
+    *   Implementar endpoint para cerrar sesión.
+
+#### 2.2. Perfiles de Usuario (profileController.js, profileRoutes.js) - HECHO (Sincronización inicial en authController.js)
+*   **`GET /api/profile`**: Obtener el perfil del usuario autenticado.
+    *   Proteger con `authMiddleware`.
+*   **`PUT /api/profile`**: Actualizar el perfil del usuario autenticado.
+    *   Proteger con `authMiddleware`.
+    *   Asegurar que no se pueda modificar `id` ni `role`.
+*   **`POST /api/profile/avatar`**: Subir/actualizar avatar del usuario.
+    *   Proteger con `authMiddleware`.
+    *   Interactuar con el bucket `avatars` de Supabase Storage.
+
+#### 2.3. Servicios (servicesController.js, servicesRoutes.js)
+*   **`GET /api/services`**: Obtener todos los servicios (público).
+*   **`POST /api/services`**: Crear un nuevo servicio.
+    *   Proteger con `authMiddleware` y `adminMiddleware`.
+*   **`PUT /api/services/:id`**: Actualizar un servicio.
+    *   Proteger con `authMiddleware` y `adminMiddleware`.
+*   **`DELETE /api/services/:id`**: Eliminar un servicio.
+    *   Proteger con `authMiddleware` y `adminMiddleware`.
+
+#### 2.4. Disponibilidad de Barberos (barberAvailabilityController.js, barberAvailabilityRoutes.js)
+*   **`GET /api/barbers/:barberId/availability`**: Obtener la disponibilidad de un barbero específico (público).
+*   **`GET /api/barber/availability`**: Obtener la disponibilidad del barbero autenticado.
+    *   Proteger con `authMiddleware` y `barberMiddleware`.
+*   **`POST /api/barber/availability`**: Crear/añadir disponibilidad para el barbero autenticado.
+    *   Proteger con `authMiddleware` y `barberMiddleware`.
+*   **`PUT /api/barber/availability/:id`**: Actualizar una entrada de disponibilidad del barbero autenticado.
+    *   Proteger con `authMiddleware` y `barberMiddleware`.
+*   **`DELETE /api/barber/availability/:id`**: Eliminar una entrada de disponibilidad del barbero autenticado.
+    *   Proteger con `authMiddleware` y `barberMiddleware`.
+
+#### 2.5. Turnos (appointmentsController.js, appointmentsRoutes.js)
+*   **`GET /api/appointments/client`**: Obtener los turnos del cliente autenticado.
+    *   Proteger con `authMiddleware`.
+*   **`GET /api/appointments/barber`**: Obtener los turnos asignados al barbero autenticado.
+    *   Proteger con `authMiddleware` y `barberMiddleware`.
+*   **`POST /api/appointments`**: Crear un nuevo turno (por un cliente).
+    *   Proteger con `authMiddleware`.
+*   **`PUT /api/appointments/:id/status`**: Actualizar el estado de un turno (por barbero o admin).
+    *   Proteger con `authMiddleware` y `barberOrAdminMiddleware`.
+*   **`DELETE /api/appointments/:id`**: Cancelar/eliminar un turno (por cliente o admin).
+    *   Proteger con `authMiddleware`.
+
+#### 2.6. Administración (adminController.js, adminRoutes.js)
+*   **`GET /api/admin/users`**: Obtener todos los usuarios.
+    *   Proteger con `authMiddleware` y `adminMiddleware`.
+*   **`PUT /api/admin/users/:id/role`**: Cambiar el rol de un usuario.
+    *   Proteger con `authMiddleware` y `adminMiddleware`.
+*   **`GET /api/admin/appointments`**: Obtener todos los turnos.
+    *   Proteger con `authMiddleware` y `adminMiddleware`.
+*   **`GET /api/admin/barber-availability`**: Obtener toda la disponibilidad de los barberos.
+    *   Proteger con `authMiddleware` y `adminMiddleware`.
+*   **`GET /api/admin/general`**: Obtener datos generales de la tienda.
+    *   Proteger con `authMiddleware` y `adminMiddleware`.
+*   **`PUT /api/admin/general`**: Actualizar datos generales de la tienda.
+    *   Proteger con `authMiddleware` y `adminMiddleware`.
+
+### 3. Middleware Adicional
+*   **`adminMiddleware.js`**: Verificar si el usuario tiene el rol 'admin'.
+*   **`barberMiddleware.js`**: Verificar si el usuario tiene el rol 'barber'.
+*   **`barberOrAdminMiddleware.js`**: Verificar si el usuario tiene el rol 'barber' o 'admin'.
+
+---
+
+## Parte 2: Frontend (Directorio `barberapp/`)
+
+El frontend se construirá con React Native (Expo) y se conectará al backend.
+
+### 1. Configuración Inicial
+*   Asegurar que el proyecto Expo esté configurado y funcionando.
+*   Configurar la conexión a Supabase en el frontend (`config/supabase.js`).
+*   Configurar la conexión al backend (URL de la API).
+
+### 2. Autenticación
+*   **Pantalla de Login (`app/(auth)/login.js`)**: 
+    *   Formulario de login (email/contraseña).
+    *   Botón de login con Google.
+*   **Pantalla de Registro (`app/(auth)/register.js`)**: 
+    *   Formulario de registro (email/contraseña, nombre completo, etc.).
+*   **Manejo de Sesión (`hooks/useSession.js`, `store/sessionStore.js`)**: 
+    *   Gestionar el estado de autenticación del usuario.
+    *   Redireccionar según el estado de autenticación (login, home, etc.).
+
+### 3. Perfil de Usuario
+*   **Pantalla de Perfil (`app/profile.js` o `app/(tabs)/profile.js`)**: 
+    *   Mostrar datos del perfil (nombre, teléfono, avatar, rol).
+    *   Botón para editar perfil.
+*   **Modal/Pantalla de Edición de Perfil (`components/EditProfileModal.js`)**: 
+    *   Formulario para actualizar nombre, teléfono, etc.
+    *   Opción para cambiar/subir avatar.
+
+### 4. Funcionalidades de Cliente
+*   **Pantalla Principal/Home (`app/(tabs)/index.js`)**: 
+    *   Mostrar servicios disponibles.
+    *   Mostrar barberos y su disponibilidad.
+    *   Interfaz para reservar un turno (seleccionar servicio, barbero, fecha, hora).
+*   **Pantalla de Mis Turnos**:
+    *   Listar los turnos del cliente con su estado.
+    *   Opción para ver detalles del turno.
+    *   Opción para cancelar un turno (si el estado lo permite).
+
+### 5. Funcionalidades de Barbero
+*   **Pantalla de Disponibilidad**:
+    *   Interfaz para que el barbero vea y gestione su disponibilidad (añadir, editar, eliminar bloques de tiempo).
+*   **Pantalla de Gestión de Turnos**:
+    *   Listar los turnos asignados al barbero.
+    *   Opciones para cambiar el estado del turno (aceptar, rechazar, en proceso, completar).
+
+### 6. Funcionalidades de Administrador
+*   **Panel de Administración (`app/(admin)/dashboard.js` o similar)**:
+    *   **Gestión de Usuarios**:
+        *   Listar todos los usuarios.
+        *   Opción para ver detalles del usuario.
+        *   Opción para cambiar el rol de un usuario (a 'barber' o 'admin').
+    *   **Gestión de Servicios**:
+        *   Listar, añadir, editar y eliminar servicios.
+    *   **Gestión de Turnos**:
+        *   Ver todos los turnos.
+        *   Opción para cambiar el estado de cualquier turno.
+    *   **Gestión de Disponibilidad de Barberos**:
+        *   Ver y gestionar la disponibilidad de todos los barberos.
+    *   **Gestión de Datos Generales de la Tienda**:
+        *   Editar horarios de apertura, información de contacto, etc.
+
+### 7. Componentes Reutilizables
+*   `AuthButton.js`: Botón de autenticación.
+*   `LoadingScreen.js`: Pantalla de carga.
+*   `ProfileCard.js`: Componente para mostrar información de perfil.
+*   Otros componentes UI necesarios (formularios, listas, selectores de fecha/hora).
+
+---
+
+## Próximos Pasos Sugeridos:
+
+1.  **Configurar el Backend:** Empezar por los endpoints de autenticación y perfiles.
+2.  **Configurar el Frontend:** Integrar la autenticación y la visualización/edición del perfil.
+3.  **Desarrollo Iterativo:** Implementar las funcionalidades restantes paso a paso, probando cada una a medida que se avanza.
