@@ -16,6 +16,12 @@ export default function AdminLayout() {
             iconName = "people-outline";
           } else if (route.name === "AdminProfile") {
             iconName = "person-circle-outline";
+          } else if (route.name === "AdminBarbershop") {
+            iconName = "cut-outline"; // Icon for Barbershop
+          } else if (route.name === "AdminServices") {
+            iconName = "briefcase-outline"; // Icon for Services
+          } else if (route.name === "AdminAppointments") {
+            iconName = "calendar-outline"; // Icon for Appointments
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -23,13 +29,14 @@ export default function AdminLayout() {
     >
       <Tabs.Screen name="AdminDashboard" options={{ title: "Dashboard" }} />
       <Tabs.Screen name="AdminUsers" options={{ title: "Usuarios" }} />
+      <Tabs.Screen name="AdminBarbershop" options={{ title: "Barbería" }} />
+      <Tabs.Screen name="AdminServices" options={{ title: "Servicios" }} />
+      <Tabs.Screen name="AdminAppointments" options={{ title: "Turnos" }} />
       <Tabs.Screen name="AdminProfile" options={{ title: "Perfil" }} />
 
       {/* Rutas que no aparecen en el Tab Bar */}
-      <Tabs.Screen name="AdminBarbershop" options={{ href: null }} />
-      <Tabs.Screen name="AdminServices" options={{ href: null }} />
-      <Tabs.Screen name="AdminCompleteProfile" options={{ href: null }} />
-      <Tabs.Screen name="[id]" options={{ href: null }} />
+      <Tabs.Screen name="AdminCompleteProfile" options={{ href: null, tabBarLabel: () => null, tabBarIcon: () => null }} />
+      <Tabs.Screen name="[id]" options={{ href: null, tabBarLabel: () => null, tabBarIcon: () => null }} />
     </Tabs>
   );
 }

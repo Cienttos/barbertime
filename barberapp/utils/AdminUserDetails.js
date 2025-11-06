@@ -12,11 +12,11 @@ import {
 } from "react-native";
 import { StyleSheet } from "react-native";
 import { useLocalSearchParams, Stack, useRouter } from "expo-router";
-import { useSession } from "../../hooks/useSession";
-import api from "../../utils/api";
+import { useSession } from "../hooks/useSession";
+import api from "./api";
 import { Ionicons } from "@expo/vector-icons";
 import { DateTime } from "luxon";
-import AppointmentDetailModal from "../../components/AppointmentDetailModal"; // Import the new component
+import AppointmentDetailModal from "../components/AppointmentDetailModal"; // Import the new component
 import { Picker } from "@react-native-picker/picker";
 
 export default function UserDetailScreen() {
