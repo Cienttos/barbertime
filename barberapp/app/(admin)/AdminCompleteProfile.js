@@ -20,7 +20,8 @@ export default function CompleteProfile() {
 
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [avatarUri, setAvatarUri] = useState(null); // Use avatarUri to store local URI or public URL
+  const [avatarUri, setAvatarUri] = useState(null);
+  const [avatarMimeType, setAvatarMimeType] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -29,9 +30,11 @@ export default function CompleteProfile() {
       setFullName(profile.full_name || "");
       setPhoneNumber(profile.phone_number || "");
       setAvatarUri(profile.avatar_url || null);
+      setAvatarMimeType(null);
     } else if (session?.user?.user_metadata?.picture && !avatarUri) {
       // If Google login and no profile yet, use Google avatar as initial
       setAvatarUri(session.user.user_metadata.picture);
+      setAvatarMimeType("image/jpeg"); // Assume Google avatar is jpeg
     }
   }, [profile, session]);
 
@@ -49,10 +52,12 @@ export default function CompleteProfile() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
     });
 
-    if (!result.canceled) {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
       setAvatarUri(result.assets[0].uri);
+      setAvatarMimeType(result.assets[0].mimeType);
     }
   };
 
@@ -64,50 +69,73 @@ export default function CompleteProfile() {
       quality: 0.5,
     });
 
-    if (!result.canceled) {
+    if (!result.canceled && result.assets && result.assets.length > 0) {
       setAvatarUri(result.assets[0].uri);
+      setAvatarMimeType(result.assets[0].mimeType);
     }
   };
 
   const uploadAvatar = async () => {
+    // 1. Validar que haya una URI de avatar y una sesión activa.
     if (!avatarUri || !session) return null;
 
-    // If the avatarUri is already a public URL (not a local file URI), no need to re-upload
+    // 2. Evitar re-subir una imagen que ya está en Supabase.
+    // Si la URI del avatar ya es una URL pública y no ha cambiado, no hacemos nada.
     if (avatarUri.startsWith("http") && avatarUri === profile?.avatar_url) {
       return avatarUri;
     }
 
     setUploading(true);
     try {
+      // 3. Crear un objeto FormData para enviar el archivo.
       const formData = new FormData();
+
+      // 4. Adjuntar la imagen al FormData.
+      // Se especifica la URI local, el nombre del archivo y el tipo de contenido.
+      const fileExtension = avatarUri.split(".").pop();
+      const fileName = `avatar.${fileExtension}`;
+
+      console.log(`[uploadAvatar] Preparing to upload: uri=${avatarUri}, mimeType=${avatarMimeType}, fileName=${fileName}`);
+
       formData.append("avatar", {
         uri: avatarUri,
-        name: `avatar-${session.user.id}.webp`,
-        type: "image/webp",
+        name: fileName,
+        type: avatarMimeType || `image/${fileExtension}`,
       });
 
-      const response = await api.post("/api/upload/avatar", formData, {
+      // 5. Enviar la petición POST al backend.
+      // El endpoint "/api/profile/avatar" está protegido y usa `multer` para procesar el archivo.
+      console.log(`[uploadAvatar] Sending request to /api/profile/avatar with token: Bearer ${session.access_token.substring(0, 20)}...`);
+      const response = await api.post("/api/profile/avatar", formData, {
         headers: {
+          Accept: "application/json",
+          "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${session.access_token}`,
-          "Content-Type": "multipart/form-data", // Important for FormData
         },
       });
 
+      // 6. Procesar la respuesta del backend.
       if (response.status === 200 || response.status === 201) {
-        Alert.alert("Éxito", "¡Avatar subido con éxito!");
+        console.log("✅ Avatar subido con éxito!");
+        // El backend devuelve la URL pública del avatar recién subido.
         return response.data.avatar_url;
       } else {
         Alert.alert(
-          // More robust error handling
           "Error",
-          response.data?.message ||
-            response.data?.error ||
-            "Error al subir el avatar."
+          response.data?.message || "Error al subir el avatar."
         );
         return null;
       }
     } catch (error) {
-      console.error("Error uploading avatar:", error);
+      console.error("💥 Error al subir el avatar:", JSON.stringify(error, null, 2));
+      if (error.response) {
+        console.error("[uploadAvatar] Response data:", error.response.data);
+        console.error("[uploadAvatar] Response status:", error.response.status);
+      } else if (error.request) {
+        console.error("[uploadAvatar] Request data:", error.request);
+      } else {
+        console.error("[uploadAvatar] Error message:", error.message);
+      }
       Alert.alert("Error", "No se pudo subir el avatar.");
       return null;
     } finally {

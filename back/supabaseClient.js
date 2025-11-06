@@ -1,16 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
-import "dotenv/config";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY; // Assuming you might need this for some client-side operations if not using the frontend client
 
-if (!supabaseUrl || !supabaseServiceRoleKey || !supabaseAnonKey) {
-  console.error(
-    "❌ Error: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, or SUPABASE_ANON_KEY not found in environment variables."
-  );
-  process.exit(1);
-}
+const supabaseUrl = "https://yhevsnwowrwzmmoaezaj.supabase.co";
+const supabaseServiceRoleKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloZXZzbndvd3J3em1tb2FlemFqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTU5MDI4NCwiZXhwIjoyMDc3MTY2Mjg0fQ.v6z8iPR-JFmTthyJTSe3MyO6HWQLVkvcXPSUQMHh7s0";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloZXZzbndvd3J3em1tb2FlemFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1OTAyODQsImV4cCI6MjA3NzE2NjI4NH0.ieC-NOhUx1WsHhBc6lL8LvIDwsciF1ZJiJB5vT69-OQ";
+
+
 
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
   auth: {
