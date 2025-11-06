@@ -70,7 +70,7 @@ export default function UserProfile() {
       </View>
 
       <Pressable
-        onPress={() => router.push("/(admin)/AdminCompleteProfile")} // Ruta unificada para editar
+        onPress={() => router.push("/(common)/CompleteProfile")} // Ruta unificada para editar
         style={styles.menuItem}
       >
         <Ionicons name="person-circle-outline" size={24} color="#4b5563" />

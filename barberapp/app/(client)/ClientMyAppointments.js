@@ -17,7 +17,7 @@ import api from "../../utils/api";
 import { Ionicons } from "@expo/vector-icons";
 import AppointmentDetailModal from "../../components/AppointmentDetailModal";
 import RatingModal from "../../components/RatingModal"; // Import the new RatingModal
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { DateTime } from "luxon";
 
 export default function AppointmentsScreen() {
