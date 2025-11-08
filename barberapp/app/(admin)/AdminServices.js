@@ -64,39 +64,43 @@ const AddServiceForm = ({ session, onServiceAdded }) => {
 
   return (
     <View style={[styles.card, styles.addServiceCard]}>
-      <Text style={styles.cardTitle}>Añadir Nuevo Servicio</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nombre del Servicio"
-        value={newServiceName}
-        onChangeText={setNewServiceName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Duración (minutos)"
-        keyboardType="numeric"
-        value={newServiceDuration}
-        onChangeText={setNewServiceDuration}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Precio"
-        keyboardType="numeric"
-        value={newServicePrice}
-        onChangeText={setNewServicePrice}
-      />
-      <Pressable
-        onPress={handleCreateService}
-        disabled={isCreating}
-        style={({ pressed }) => [
-          styles.button,
-          styles.createButton,
-          isCreating && styles.buttonDisabled,
-          pressed && !isCreating && styles.buttonPressed,
-        ]}
-      >
-        {isCreating ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>Añadir Servicio</Text>}
-      </Pressable>
+      <View style={styles.addServiceHeader}>
+        <Text style={styles.cardTitle}>Añadir Nuevo Servicio</Text>
+      </View>
+      <View style={styles.formContent}>
+        <TextInput
+          style={styles.input}
+          placeholder="Nombre del Servicio"
+          value={newServiceName}
+          onChangeText={setNewServiceName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Duración (minutos)"
+          keyboardType="numeric"
+          value={newServiceDuration}
+          onChangeText={setNewServiceDuration}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Precio"
+          keyboardType="numeric"
+          value={newServicePrice}
+          onChangeText={setNewServicePrice}
+        />
+        <Pressable
+          onPress={handleCreateService}
+          disabled={isCreating}
+          style={({ pressed }) => [
+            styles.button,
+            styles.createButton,
+            isCreating && styles.buttonDisabled,
+            pressed && !isCreating && styles.buttonPressed,
+          ]}
+        >
+          {isCreating ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>Añadir Servicio</Text>}
+        </Pressable>
+      </View>
     </View>
   );
 };
@@ -426,7 +430,22 @@ const styles = StyleSheet.create({
     elevation: 2,
     padding: 16,
   },
-  addServiceCard: {},
+  addServiceCard: {
+    padding: 0
+  },
+  addServiceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  formContent: {
+    padding: 16,
+  },
   listCard: {
     marginTop: 24,
     flex: 1,
