@@ -262,9 +262,9 @@ export default function ServicesManagementScreen() {
               ]}
             >
               {loading ? (
-                <ActivityIndicator color="#457b9d" />
+                <ActivityIndicator color="#0052cc" />
               ) : (
-                <Ionicons name="refresh-outline" size={24} color="#457b9d" />
+                <Ionicons name="refresh-outline" size={24} color="#0052cc" />
               )}
             </Pressable>
           </View>
@@ -279,16 +279,14 @@ export default function ServicesManagementScreen() {
                   <Text style={styles.serviceName}>{item.name}</Text>
                   <View style={styles.metaContainer}>
                     <View style={styles.metaItem}>
-                      <Ionicons name="time-outline" size={16} color="#457b9d" />
+                      <Ionicons name="time-outline" size={16} color="#475569" />
                       <Text style={styles.serviceMeta}>
                         {item.duration_minutes} min
                       </Text>
                     </View>
                     <View style={styles.metaItem}>
-                      <Ionicons name="cash-outline" size={16} color="#16a34a" />
-                      <Text style={[styles.serviceMeta, { color: "#16a34a" }]}>
-                        ${item.price}
-                      </Text>
+                      <Ionicons name="cash-outline" size={16} color="#475569" />
+                      <Text style={styles.serviceMeta}>${item.price}</Text>
                     </View>
                   </View>
                 </View>
@@ -297,7 +295,7 @@ export default function ServicesManagementScreen() {
                     onPress={() => handleOpenEditModal(item)}
                     style={styles.actionButton}
                   >
-                    <Ionicons name="create-outline" size={24} color="#457b9d" />
+                    <Ionicons name="create-outline" size={24} color="#0052cc" />
                   </Pressable>
                   <Pressable
                     onPress={() => handleDeleteService(item.id)}
@@ -502,7 +500,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   createButton: {
-    backgroundColor: "#457b9d",
+    backgroundColor: "#0052cc",
   },
   buttonDisabled: {
     backgroundColor: "#9ca3af",
@@ -631,7 +629,7 @@ const modalStyles = StyleSheet.create({
     marginRight: 8,
   },
   saveButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#0052cc",
     marginLeft: 8,
   },
   buttonPressed: {

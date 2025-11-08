@@ -34,8 +34,8 @@ const daysOfWeek = {
 };
 
 const palette = {
-  primary: "#007BFF",
-  secondary: "#dc3545",
+  primary: "#0052cc",
+  secondary: "#e63946",
   background: "#f3f4f6",
   text: "#1f2937",
   white: "#fff",
@@ -151,9 +151,13 @@ export default function AdminBarbershop() {
 
   const handleImagePick = async () => {
     if (Platform.OS !== "web") {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Permiso denegado", "Se necesita acceso a la galería para subir una imagen.");
+        Alert.alert(
+          "Permiso denegado",
+          "Se necesita acceso a la galería para subir una imagen."
+        );
         return;
       }
     }
@@ -228,22 +232,26 @@ export default function AdminBarbershop() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <MaterialCommunityIcons name="store-edit-outline" size={24} color={palette.primary} />
+          <MaterialCommunityIcons
+            name="store-edit-outline"
+            size={24}
+            color={palette.primary}
+          />
           <Text style={styles.title}>Mi Barbería</Text>
         </View>
       </View>
       <ScrollView>
         <View style={styles.form}>
-          <ShopInfoCard 
-            shopData={shopData} 
-            onInputChange={handleInputChange} 
-            onImagePick={handleImagePick} 
-            uploading={uploading} 
+          <ShopInfoCard
+            shopData={shopData}
+            onInputChange={handleInputChange}
+            onImagePick={handleImagePick}
+            uploading={uploading}
           />
 
-          <WelcomeMessageCard 
-            welcome_message={shopData.welcome_message} 
-            onInputChange={handleInputChange} 
+          <WelcomeMessageCard
+            welcome_message={shopData.welcome_message}
+            onInputChange={handleInputChange}
           />
 
           <Text style={styles.sectionTitle}>Redes Sociales</Text>
@@ -256,9 +264,11 @@ export default function AdminBarbershop() {
               onRemoveSocialMedia={removeSocialMedia}
             />
           ))}
-          <TouchableOpacity style={styles.addButton} onPress={addSocialMedia}>
-            <Text style={styles.addButtonText}>Añadir Red Social</Text>
-          </TouchableOpacity>
+          <Button
+            title="Añadir Red Social"
+            onPress={addSocialMedia}
+            color={palette.primary}
+          />
 
           <Text style={styles.sectionTitle}>Horarios de Trabajo</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -268,7 +278,9 @@ export default function AdminBarbershop() {
                 dayKey={dayKey}
                 dayName={dayName}
                 dayData={shopData.working_hours[dayKey]}
-                onToggle={(value) => handleWorkingHoursChange(dayKey, "enabled", value)}
+                onToggle={(value) =>
+                  handleWorkingHoursChange(dayKey, "enabled", value)
+                }
                 onTimePress={(mode) => showTimePicker(dayKey, mode)}
               />
             ))}
@@ -299,12 +311,17 @@ export default function AdminBarbershop() {
       )}
 
       <View style={styles.saveButtonContainer}>
-        <Button
-          title={isSaving ? "Guardando..." : "Guardar Cambios"}
+        <TouchableOpacity
           onPress={handleSave}
           disabled={isSaving}
-          color={palette.primary}
-        />
+          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+        >
+          {isSaving ? (
+            <ActivityIndicator color={palette.white} />
+          ) : (
+            <Text style={styles.saveButtonText}>Guardar Cambios</Text>
+          )}
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -316,7 +333,9 @@ const ShopInfoCard = ({ shopData, onInputChange, onImagePick, uploading }) => {
       <Card.Content style={styles.shopInfoCardContent}>
         <TouchableOpacity onPress={onImagePick} disabled={uploading}>
           <Image
-            source={{ uri: shopData.logo_url || "https://via.placeholder.com/100" }}
+            source={{
+              uri: shopData.logo_url || "https://via.placeholder.com/100",
+            }}
             style={styles.logo}
           />
           {uploading && <ActivityIndicator style={styles.logoLoading} />}
@@ -341,9 +360,16 @@ const ShopInfoCard = ({ shopData, onInputChange, onImagePick, uploading }) => {
 const WelcomeMessageCard = ({ welcome_message, onInputChange }) => {
   return (
     <Card style={styles.welcomeCard}>
-      <Card.Title 
+      <Card.Title
         title="Mensaje de Bienvenida"
-        left={(props) => <MaterialCommunityIcons {...props} name="message-outline" size={24} color={palette.darkGray} />} 
+        left={(props) => (
+          <MaterialCommunityIcons
+            {...props}
+            name="message-outline"
+            size={24}
+            color={palette.darkGray}
+          />
+        )}
       />
       <Card.Content>
         <TextInput
@@ -357,14 +383,39 @@ const WelcomeMessageCard = ({ welcome_message, onInputChange }) => {
   );
 };
 
-const DayWorkingHoursCard = ({ dayKey, dayName, dayData, onToggle, onTimePress }) => {
+const DayWorkingHoursCard = ({
+  dayKey,
+  dayName,
+  dayData,
+  onToggle,
+  onTimePress,
+}) => {
   const isEnabled = dayData?.enabled || false;
   return (
-    <View style={[styles.card, isEnabled ? styles.cardEnabled : styles.cardDisabled]}>
-      <MaterialCommunityIcons name="calendar-clock" size={40} color={isEnabled ? palette.primary : palette.gray} />
-      <View style={{alignItems: 'center', marginVertical: 5}}>
-        <Text style={[styles.dayCardTitle, !isEnabled && { color: palette.gray }]}>{dayName}</Text>
-        <Switch style={{ transform: [{ scaleX: .8 }, { scaleY: .8 }]}} value={isEnabled} onValueChange={onToggle} trackColor={{ false: "#767577", true: palette.primary }} thumbColor={isEnabled ? palette.white : "#f4f3f4"}/>
+    <View
+      style={[
+        styles.card,
+        isEnabled ? styles.cardEnabled : styles.cardDisabled,
+      ]}
+    >
+      <MaterialCommunityIcons
+        name="calendar-clock"
+        size={40}
+        color={isEnabled ? palette.primary : palette.darkGray}
+      />
+      <View style={{ alignItems: "center", marginVertical: 5 }}>
+        <Text
+          style={[styles.dayCardTitle, !isEnabled && { color: palette.gray }]}
+        >
+          {dayName}
+        </Text>
+        <Switch
+          style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+          value={isEnabled}
+          onValueChange={onToggle}
+          trackColor={{ false: "#767577", true: palette.primary }}
+          thumbColor={isEnabled ? palette.white : "#f4f3f4"}
+        />
       </View>
       {isEnabled && (
         <View style={styles.dayCardContent}>
@@ -386,7 +437,12 @@ const DayWorkingHoursCard = ({ dayKey, dayName, dayData, onToggle, onTimePress }
   );
 };
 
-const SocialMediaCard = ({ social, index, onSocialMediaChange, onRemoveSocialMedia }) => {
+const SocialMediaCard = ({
+  social,
+  index,
+  onSocialMediaChange,
+  onRemoveSocialMedia,
+}) => {
   const getSocialIcon = (name) => {
     const lowerCaseName = name.toLowerCase();
     if (lowerCaseName.includes("instagram")) return "instagram";
@@ -400,7 +456,11 @@ const SocialMediaCard = ({ social, index, onSocialMediaChange, onRemoveSocialMed
     <Card style={styles.socialCard}>
       <Card.Content>
         <View style={styles.socialCardHeader}>
-          <MaterialCommunityIcons name={getSocialIcon(social.name)} size={24} color={palette.darkGray} />
+          <MaterialCommunityIcons
+            name={getSocialIcon(social.name)}
+            size={24}
+            color={palette.darkGray}
+          />
           <TextInput
             style={styles.socialInputName}
             placeholder="Nombre (e.g., Instagram)"
@@ -502,23 +562,25 @@ const styles = StyleSheet.create({
     borderBottomColor: palette.gray,
     paddingBottom: 5,
   },
-  addButton: {
-    backgroundColor: palette.primary,
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  addButtonText: {
-    color: palette.white,
-    fontWeight: "bold",
-    fontSize: 16,
-  },
   saveButtonContainer: {
     padding: 10,
     backgroundColor: palette.white,
     borderTopWidth: 1,
     borderTopColor: palette.gray,
+  },
+  saveButton: {
+    backgroundColor: palette.primary,
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saveButtonDisabled: {
+    backgroundColor: palette.gray,
+  },
+  saveButtonText: {
+    color: palette.white,
+    fontWeight: "bold",
+    fontSize: 16,
   },
   shopInfoCard: {
     marginBottom: 20,
@@ -591,7 +653,7 @@ const styles = StyleSheet.create({
   },
   timeBoxTitle: {
     fontSize: 12,
-    color: palette.darkGray
+    color: palette.darkGray,
   },
   timeText: {
     fontSize: 16,

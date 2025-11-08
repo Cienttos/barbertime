@@ -6,10 +6,10 @@ export default function AdminLayout() {
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: "#0052cc", // Azul para admin
+        tabBarActiveTintColor: "#0052cc", // Azul para el texto activo
         tabBarInactiveTintColor: "gray",
-        tabBarIcon: ({ color, size }) => {
-          let iconName;
+        tabBarIcon: ({ focused, size }) => {
+          let iconName; // El color del ícono se manejará por separado
           if (route.name === "AdminDashboard") {
             iconName = "stats-chart-outline";
           } else if (route.name === "AdminUsers") {
@@ -23,7 +23,10 @@ export default function AdminLayout() {
           } else if (route.name === "AdminAppointments") {
             iconName = "calendar-outline"; // Icon for Appointments
           }
-          return <Ionicons name={iconName} size={size} color={color} />;
+
+          // Si la pestaña está seleccionada (focused), el ícono es rojo. Si no, es gris.
+          const iconColor = focused ? "#e63946" : "gray";
+          return <Ionicons name={iconName} size={size} color={iconColor} />;
         },
       })}
     >

@@ -14,6 +14,7 @@ import { useSessionStore } from "../../store/sessionStore";
 import api from "../../utils/api";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function UsersManagementScreen() {
   const { session } = useSessionStore();
@@ -104,7 +105,10 @@ export default function UsersManagementScreen() {
       <View style={styles.content}>
         {/* Filter and Search UI */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Filtrar Usuarios</Text>
+          <View style={styles.cardTitleContainer}>
+            <Text style={styles.cardTitle}>Filtrar Usuarios</Text>
+            <Ionicons name="search-outline" size={24} color="#e63946" />
+          </View>
           <TextInput
             placeholder="Buscar por nombre o email..."
             value={searchQuery}
@@ -135,7 +139,10 @@ export default function UsersManagementScreen() {
         </View>
 
         <View style={[styles.card, styles.listCard]}>
-          <Text style={styles.cardTitle}>Lista de Usuarios</Text>
+          <View style={styles.cardTitleContainer}>
+            <Text style={styles.cardTitle}>Lista de Usuarios</Text>
+            <Ionicons name="list-outline" size={24} color="#0052cc" />
+          </View>
           <FlatList
             data={filteredUsers}
             keyExtractor={(item) => item.id}
@@ -152,23 +159,59 @@ export default function UsersManagementScreen() {
                   pressed && styles.userCardPressed,
                 ]}
               >
-                <Image
-                  source={{
-                    uri:
-                      item.avatar_url ||
-                      `https://ui-avatars.com/api/?name=${
-                        item.full_name || item.email
-                      }&background=random`,
-                  }}
-                  style={styles.avatar}
-                />
-                <View>
-                  <Text style={styles.userName}>
-                    {item.full_name || "Usuario sin nombre"}
-                  </Text>
-                  <Text style={styles.userEmail}>{item.email}</Text>
-                  <Text style={styles.userRole}>Rol: {item.role}</Text>
-                </View>
+                {(() => {
+                  const roleInfo = {
+                    barber: { icon: "cut-outline", color: "#0052cc" },
+                    admin: {
+                      icon: "shield-checkmark-outline",
+                      color: "#e63946",
+                    },
+                    client: { icon: "person-outline", color: "#6b7280" },
+                  };
+                  const currentRole = roleInfo[item.role] || roleInfo.client;
+                  return (
+                    <>
+                      <LinearGradient
+                        colors={["#e63946", "#ffffff", "#0052cc"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.avatarWrapper}
+                      >
+                        <Image
+                          source={{
+                            uri:
+                              item.avatar_url ||
+                              `https://ui-avatars.com/api/?name=${
+                                item.full_name || item.email
+                              }&background=random`,
+                          }}
+                          style={styles.avatar}
+                        />
+                      </LinearGradient>
+                      <View>
+                        <Text style={styles.userName}>
+                          {item.full_name || "Usuario sin nombre"}
+                        </Text>
+                        <Text style={styles.userEmail}>{item.email}</Text>
+                        <View style={styles.roleContainer}>
+                          <Ionicons
+                            name={currentRole.icon}
+                            size={16}
+                            color={currentRole.color}
+                          />
+                          <Text
+                            style={[
+                              styles.userRole,
+                              { color: currentRole.color },
+                            ]}
+                          >
+                            {item.role}
+                          </Text>
+                        </View>
+                      </View>
+                    </>
+                  );
+                })()}
               </Pressable>
             )}
             ListEmptyComponent={
@@ -236,11 +279,16 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  cardTitleContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
   cardTitle: {
     fontSize: 20,
     fontWeight: "600",
     color: "#334155",
-    marginBottom: 16,
   },
   filterContainer: {
     marginBottom: 16,
@@ -270,7 +318,7 @@ const styles = StyleSheet.create({
     borderColor: "#e5e7eb",
   },
   filterButtonActive: {
-    backgroundColor: "#2563eb",
+    backgroundColor: "#0052cc",
   },
   filterButtonText: {
     fontWeight: "600",
@@ -299,11 +347,20 @@ const styles = StyleSheet.create({
   userCardPressed: {
     backgroundColor: "#f9fafb",
   },
+  avatarWrapper: {
+    width: 58, // Tamaño del contenedor del gradiente
+    height: 58,
+    borderRadius: 30,
+    marginRight: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   avatar: {
-    width: 56,
+    width: 56, // 2px más pequeño que el wrapper para crear el borde
     height: 56,
     borderRadius: 28,
-    marginRight: 16,
+    // El fondo blanco es importante si la imagen tiene transparencias
+    backgroundColor: "white",
   },
   userName: {
     fontWeight: "600",
@@ -313,11 +370,16 @@ const styles = StyleSheet.create({
   userEmail: {
     color: "#4b5563",
   },
+  roleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
   userRole: {
-    color: "#6b7280",
     fontStyle: "italic",
     textTransform: "capitalize",
-    marginTop: 4,
+    fontWeight: "600",
   },
   emptyContainer: {
     flex: 1,

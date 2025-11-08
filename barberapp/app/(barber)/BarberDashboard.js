@@ -149,7 +149,9 @@ export default function BarberDashboard() {
 
       <View style={styles.container}>
         {shopData.shopSettings?.address && (
-          <Text style={styles.addressText}>{shopData.shopSettings.address}</Text>
+          <Text style={styles.addressText}>
+            {shopData.shopSettings.address}
+          </Text>
         )}
 
         <View style={styles.divider} />
@@ -199,17 +201,17 @@ export default function BarberDashboard() {
 
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
-            <Ionicons name="hourglass-outline" size={32} color="#10B981" />
+            <Ionicons name="hourglass-outline" size={32} color="#0052cc" />
             <Text style={styles.statValue}>{upcomingAppointments}</Text>
             <Text style={styles.statLabel}>Próximos Turnos</Text>
           </View>
           <View style={styles.statBox}>
-            <Ionicons name="checkmark-done-outline" size={32} color="#8B5CF6" />
+            <Ionicons name="checkmark-done-outline" size={32} color="#0052cc" />
             <Text style={styles.statValue}>{completedAppointments}</Text>
             <Text style={styles.statLabel}>Turnos completados</Text>
           </View>
           <View style={styles.statBox}>
-            <Ionicons name="star-outline" size={32} color="#F59E0B" />
+            <Ionicons name="star-outline" size={32} color="#e63946" />
             <Text style={styles.statValue}>{averageRating}</Text>
             <Text style={styles.statLabel}>Calificación</Text>
           </View>

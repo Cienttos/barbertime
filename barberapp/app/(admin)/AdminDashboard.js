@@ -147,19 +147,19 @@ export default function AdminDashboard() {
                 icon="cash"
                 label="Ganancias"
                 value={`$${stats.totalEarnings.toFixed(2)}`}
-                color="#16a34a" // Green
+                color="#16a34a" // Mantengo verde para dinero
               />
               <StatCard
                 icon="hourglass"
                 label="Turnos Próximos"
                 value={stats.upcomingAppointments}
-                color="#f59e0b" // Amber
+                color="#0052cc" // Blue
               />
               <StatCard
                 icon="checkmark-done"
                 label="Turnos Completados"
-                value={stats.completedAppointments}
-                color="#9333ea"
+                value={stats.completedAppointments} // Blue
+                color="#0052cc"
               />
               <StatCard
                 icon="close-circle"
@@ -171,7 +171,7 @@ export default function AdminDashboard() {
                 icon="star"
                 label="Calificación Prom."
                 value={stats.averageRating}
-                color="#9333ea" // Purple
+                color="#e63946" // Red
               />
             </View>
 

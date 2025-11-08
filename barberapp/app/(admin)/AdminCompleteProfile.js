@@ -95,7 +95,9 @@ export default function CompleteProfile() {
       const fileExtension = avatarUri.split(".").pop();
       const fileName = `avatar.${fileExtension}`;
 
-      console.log(`[uploadAvatar] Preparing to upload: uri=${avatarUri}, mimeType=${avatarMimeType}, fileName=${fileName}`);
+      console.log(
+        `[uploadAvatar] Preparing to upload: uri=${avatarUri}, mimeType=${avatarMimeType}, fileName=${fileName}`
+      );
 
       formData.append("avatar", {
         uri: avatarUri,
@@ -105,7 +107,12 @@ export default function CompleteProfile() {
 
       // 5. Enviar la petición POST al backend.
       // El endpoint "/api/profile/avatar" está protegido y usa `multer` para procesar el archivo.
-      console.log(`[uploadAvatar] Sending request to /api/profile/avatar with token: Bearer ${session.access_token.substring(0, 20)}...`);
+      console.log(
+        `[uploadAvatar] Sending request to /api/profile/avatar with token: Bearer ${session.access_token.substring(
+          0,
+          20
+        )}...`
+      );
       const response = await api.post("/api/profile/avatar", formData, {
         headers: {
           Accept: "application/json",
@@ -127,7 +134,10 @@ export default function CompleteProfile() {
         return null;
       }
     } catch (error) {
-      console.error("💥 Error al subir el avatar:", JSON.stringify(error, null, 2));
+      console.error(
+        "💥 Error al subir el avatar:",
+        JSON.stringify(error, null, 2)
+      );
       if (error.response) {
         console.error("[uploadAvatar] Response data:", error.response.data);
         console.error("[uploadAvatar] Response status:", error.response.status);
@@ -217,7 +227,7 @@ export default function CompleteProfile() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#0052cc" />
       </View>
     );
   }
@@ -293,7 +303,7 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
   },
   changeAvatarText: {
-    color: "#007bff",
+    color: "#0052cc",
     marginTop: 10,
   },
   input: {
@@ -308,7 +318,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     width: "100%",
-    backgroundColor: "#007bff",
+    backgroundColor: "#0052cc",
     padding: 15,
     borderRadius: 8,
     alignItems: "center",

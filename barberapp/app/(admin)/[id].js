@@ -95,7 +95,7 @@ export default function UserDetailScreen() {
   if (showLoadingScreen) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color="#0052cc" />
         <Text>Cargando detalles del usuario...</Text>
       </View>
     );
@@ -129,7 +129,7 @@ export default function UserDetailScreen() {
               <Ionicons
                 name="call-outline"
                 size={16}
-                color={user.phone_number ? "#2563eb" : "#6b7280"}
+                color={user.phone_number ? "#0052cc" : "#6b7280"}
               />
               <Text style={styles.infoValue}>
                 {user.phone_number || "No especificado"}
@@ -144,19 +144,19 @@ export default function UserDetailScreen() {
               icon="calendar-outline"
               label="Turnos Totales"
               value={stats.totalAppointments || 0}
-              color="#2563eb"
+              color="#0052cc"
             />
             <StatCard
               icon="cash-outline"
               label="Ganancias"
               value={`$${(stats.totalEarnings || 0).toFixed(2)}`}
-              color="#16a34a"
+              color="#0052cc"
             />
             <StatCard
               icon="star-outline"
               label="Rating"
               value={stats.averageRating || 0}
-              color="#f59e0b"
+              color="#e63946"
             />
           </View>
         ) : (
@@ -166,19 +166,19 @@ export default function UserDetailScreen() {
                 icon="checkmark-done-outline"
                 label="Completados"
                 value={stats.completed || 0}
-                color="#16a34a"
+                color="#0052cc"
               />
               <StatCard
                 icon="close-outline"
                 label="Cancelados"
                 value={stats.cancelled || 0}
-                color="#e11d48"
+                color="#e63946"
               />
               <StatCard
                 icon="cash-outline"
                 label="Gasto Total"
                 value={`$${(stats.totalSpent || 0).toFixed(2)}`}
-                color="#2563eb"
+                color="#0052cc"
               />
             </View>
 
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
-    backgroundColor: "#2563eb",
+    backgroundColor: "#0052cc",
   },
   buttonDisabled: {
     backgroundColor: "#9ca3af",
@@ -486,10 +486,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "bold",
   },
-  statusCompletado: { backgroundColor: "#9333ea" },
-  statusReservado: { backgroundColor: "#2563eb" },
-  statusEnProceso: { backgroundColor: "#16a34a" },
-  statusCancelado: { backgroundColor: "#dc2626" },
+  statusCompletado: { backgroundColor: "#0052cc" }, // Azul
+  statusReservado: { backgroundColor: "#f59e0b" }, // Naranja para pendiente
+  statusEnProceso: { backgroundColor: "#16a34a" }, // Verde para en proceso
+  statusCancelado: { backgroundColor: "#e63946" }, // Rojo
   separator: {
     height: 1,
     backgroundColor: "#e5e7eb",
