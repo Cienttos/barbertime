@@ -21,6 +21,7 @@ import { supabase } from "../../config/supabase";
 import { decode } from "base64-arraybuffer";
 import { Card, IconButton } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRef } from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 const daysOfWeek = {
@@ -53,6 +54,7 @@ export default function AdminBarbershop() {
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [timePickerMode, setTimePickerMode] = useState("open"); // 'open' or 'close'
+  const socialMediaScrollRef = useRef(null);
 
   useEffect(() => {
     const fetchShopData = async () => {
@@ -118,6 +120,9 @@ export default function AdminBarbershop() {
       ...prev,
       social_media: [...prev.social_media, { name: "", url: "" }],
     }));
+    setTimeout(() => {
+      socialMediaScrollRef.current?.scrollToEnd({ animated: true });
+    }, 100); // Pequeño delay para asegurar que el nuevo item se renderice
   };
 
   const removeSocialMedia = (index) => {
@@ -255,20 +260,36 @@ export default function AdminBarbershop() {
           />
 
           <Text style={styles.sectionTitle}>Redes Sociales</Text>
-          {shopData.social_media.map((social, index) => (
-            <SocialMediaCard
-              key={index}
-              social={social}
-              index={index}
-              onSocialMediaChange={handleSocialMediaChange}
-              onRemoveSocialMedia={removeSocialMedia}
-            />
-          ))}
-          <Button
-            title="Añadir Red Social"
+          <View style={styles.socialMediaListContainer}>
+            <ScrollView
+              ref={socialMediaScrollRef}
+              nestedScrollEnabled={true}
+              onContentSizeChange={() =>
+                socialMediaScrollRef.current?.scrollToEnd({ animated: true })
+              }
+            >
+              {shopData.social_media.map((social, index) => (
+                <SocialMediaCard
+                  key={index}
+                  social={social}
+                  index={index}
+                  onSocialMediaChange={handleSocialMediaChange}
+                  onRemoveSocialMedia={removeSocialMedia}
+                />
+              ))}
+            </ScrollView>
+          </View>
+          <TouchableOpacity
             onPress={addSocialMedia}
-            color={palette.primary}
-          />
+            style={styles.addButtonOutline}
+          >
+            <MaterialCommunityIcons
+              name="plus"
+              size={18}
+              color={palette.primary}
+            />
+            <Text style={styles.addButtonOutlineText}>Añadir Red Social</Text>
+          </TouchableOpacity>
 
           <Text style={styles.sectionTitle}>Horarios de Trabajo</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -331,26 +352,47 @@ const ShopInfoCard = ({ shopData, onInputChange, onImagePick, uploading }) => {
   return (
     <Card style={styles.shopInfoCard}>
       <Card.Content style={styles.shopInfoCardContent}>
-        <TouchableOpacity onPress={onImagePick} disabled={uploading}>
+        <TouchableOpacity
+          onPress={onImagePick}
+          disabled={uploading}
+          style={styles.logoContainer}
+        >
           <Image
             source={{
               uri: shopData.logo_url || "https://via.placeholder.com/100",
             }}
             style={styles.logo}
           />
+          <View style={styles.editIconOverlay}>
+            <MaterialCommunityIcons name="pencil" size={18} color="white" />
+          </View>
           {uploading && <ActivityIndicator style={styles.logoLoading} />}
         </TouchableOpacity>
         <View style={styles.shopInfoTextContainer}>
-          <TextInput
-            style={styles.shopNameInput}
-            value={shopData.name}
-            onChangeText={(text) => onInputChange("name", text)}
-          />
-          <TextInput
-            style={styles.shopAddressInput}
-            value={shopData.address}
-            onChangeText={(text) => onInputChange("address", text)}
-          />
+          <View style={styles.inputWithIcon}>
+            <TextInput
+              style={styles.shopNameInput}
+              value={shopData.name}
+              onChangeText={(text) => onInputChange("name", text)}
+            />
+            <MaterialCommunityIcons
+              name="pencil"
+              size={16}
+              color={palette.gray}
+            />
+          </View>
+          <View style={styles.inputWithIcon}>
+            <TextInput
+              style={styles.shopAddressInput}
+              value={shopData.address}
+              onChangeText={(text) => onInputChange("address", text)}
+            />
+            <MaterialCommunityIcons
+              name="pencil"
+              size={16}
+              color={palette.gray}
+            />
+          </View>
         </View>
       </Card.Content>
     </Card>
@@ -359,27 +401,25 @@ const ShopInfoCard = ({ shopData, onInputChange, onImagePick, uploading }) => {
 
 const WelcomeMessageCard = ({ welcome_message, onInputChange }) => {
   return (
-    <Card style={styles.welcomeCard}>
-      <Card.Title
-        title="Mensaje de Bienvenida"
-        left={(props) => (
-          <MaterialCommunityIcons
-            {...props}
-            name="message-outline"
-            size={24}
-            color={palette.darkGray}
-          />
-        )}
-      />
-      <Card.Content>
+    <View style={styles.welcomeMessageCard}>
+      <Text style={styles.sectionTitle}>Mensaje de Bienvenida</Text>
+      <View style={styles.welcomeMessageInputContainer}>
         <TextInput
-          style={[styles.input, styles.textarea]}
+          style={styles.welcomeMessageInput}
           value={welcome_message}
           onChangeText={(text) => onInputChange("welcome_message", text)}
           multiline
+          placeholder="Toca para editar el mensaje que verán tus clientes..."
+          placeholderTextColor={palette.darkGray}
         />
-      </Card.Content>
-    </Card>
+        <MaterialCommunityIcons
+          name="pencil"
+          size={16}
+          color={palette.gray}
+          style={styles.welcomeMessageEditIcon}
+        />
+      </View>
+    </View>
   );
 };
 
@@ -401,7 +441,7 @@ const DayWorkingHoursCard = ({
       <MaterialCommunityIcons
         name="calendar-clock"
         size={40}
-        color={isEnabled ? palette.primary : palette.darkGray}
+        color={isEnabled ? palette.primary : palette.secondary}
       />
       <View style={{ alignItems: "center", marginVertical: 5 }}>
         <Text
@@ -413,7 +453,7 @@ const DayWorkingHoursCard = ({
           style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
           value={isEnabled}
           onValueChange={onToggle}
-          trackColor={{ false: "#767577", true: palette.primary }}
+          trackColor={{ false: palette.secondary, true: palette.primary }}
           thumbColor={isEnabled ? palette.white : "#f4f3f4"}
         />
       </View>
@@ -469,7 +509,7 @@ const SocialMediaCard = ({
           />
           <IconButton
             icon="delete"
-            color={palette.secondary}
+            iconColor={palette.secondary}
             size={20}
             onPress={() => onRemoveSocialMedia(index)}
           />
@@ -541,10 +581,27 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: "top",
   },
+  logoContainer: {
+    position: "relative",
+  },
   logo: {
     width: 100,
     height: 100,
     borderRadius: 50,
+  },
+  editIconOverlay: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    padding: 6,
+    borderRadius: 15,
+  },
+  inputWithIcon: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderColor: "#eee",
   },
   logoLoading: {
     position: "absolute",
@@ -598,24 +655,48 @@ const styles = StyleSheet.create({
     marginLeft: 15,
   },
   shopNameInput: {
+    flex: 1,
     fontSize: 20,
     fontWeight: "bold",
-    borderBottomWidth: 1,
-    borderColor: "#eee",
     paddingBottom: 5,
     color: palette.text,
   },
   shopAddressInput: {
+    flex: 1,
     fontSize: 14,
     color: palette.darkGray,
     marginTop: 5,
   },
-  welcomeCard: {
+  welcomeMessageContainer: {
+    // Estilo no utilizado
+  },
+  welcomeMessageCard: {
     marginBottom: 20,
-    elevation: 2,
+  },
+  welcomeMessageInputContainer: {
+    position: "relative",
     backgroundColor: palette.white,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     borderColor: palette.gray,
     borderWidth: 1,
+  },
+  welcomeMessageEditIcon: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+  },
+  welcomeMessageInput: {
+    height: 120,
+    textAlignVertical: "top",
+    fontSize: 16,
+    padding: 16,
+    paddingRight: 40, // Espacio para el ícono
+    color: palette.text,
   },
   card: {
     width: 160,
@@ -631,6 +712,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-around",
     padding: 10,
+  },
+  dayCard: {
+    // Reemplazado por 'card' para el carrusel
   },
   cardEnabled: {
     backgroundColor: palette.white,
@@ -677,13 +761,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     marginLeft: 10,
-    color: palette.text,
+    color: palette.primary,
+    flex: 1,
   },
   socialInputUrl: {
-    borderTopWidth: 1,
-    borderColor: "#eee",
-    padding: 10,
-    marginTop: 10,
     color: palette.text,
+    backgroundColor: palette.lightGray,
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  workingHoursListContainer: {},
+  socialMediaListContainer: {
+    height: 300, // Altura aumentada para la lista de redes sociales
+    borderWidth: 1,
+    borderColor: palette.gray,
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 10,
+  },
+  addButtonOutline: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: palette.primary,
+    borderRadius: 8,
+    padding: 10,
+    gap: 8,
+    marginTop: 10,
+  },
+  addButtonOutlineText: {
+    color: palette.primary,
+    fontWeight: "bold",
   },
 });

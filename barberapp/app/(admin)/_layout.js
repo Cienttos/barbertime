@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function AdminLayout() {
   return (
@@ -10,6 +10,18 @@ export default function AdminLayout() {
         tabBarInactiveTintColor: "gray",
         tabBarIcon: ({ focused, size }) => {
           let iconName; // El color del ícono se manejará por separado
+
+          if (route.name === "AdminBarbershop") {
+            const iconColor = focused ? "#e63946" : "gray";
+            return (
+              <MaterialCommunityIcons
+                name="store-edit-outline"
+                size={size}
+                color={iconColor}
+              />
+            );
+          }
+
           if (route.name === "AdminDashboard") {
             iconName = "stats-chart-outline";
           } else if (route.name === "AdminUsers") {
@@ -17,7 +29,7 @@ export default function AdminLayout() {
           } else if (route.name === "AdminProfile") {
             iconName = "person-circle-outline";
           } else if (route.name === "AdminBarbershop") {
-            iconName = "business-outline"; // Icon for Barbershop
+            // This case is now handled above
           } else if (route.name === "AdminServices") {
             iconName = "cut-outline"; // Icon for Services
           } else if (route.name === "AdminAppointments") {
