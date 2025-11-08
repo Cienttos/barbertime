@@ -10,7 +10,7 @@ import {
   Switch,
 } from "react-native";
 import { useSessionStore } from "../../store/sessionStore";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import api from "../../utils/api";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -161,7 +161,14 @@ export default function BarberAvailabilityScreen() {
     <View style={styles.container}>
       {/* --- Header Fijo --- */}
       <View style={styles.header}>
-        <Text style={styles.title}>Mis Horarios</Text>
+        <View style={styles.titleContainer}>
+          <MaterialCommunityIcons
+            name="clock-time-eight-outline"
+            size={24}
+            color="#0052cc"
+          />
+          <Text style={styles.title}>Mis Horarios</Text>
+        </View>
       </View>
 
       {/* --- Contenido Desplazable --- */}
@@ -174,19 +181,25 @@ export default function BarberAvailabilityScreen() {
             Object.keys(daysOfWeek).map((key) => {
               const dayData = shopSettings.working_hours[key];
               const isShopOpen = dayData && dayData.enabled;
-              const isBarberEnabled = barberAvailability[key]?.enabled || false;
-              const hasConflict = isBarberEnabled && !isShopOpen;
+              // Si la tienda está cerrada, el barbero no puede habilitar ese día.
+              const isBarberEnabled =
+                isShopOpen && (barberAvailability[key]?.enabled || false);
 
               return (
                 <View
                   key={key}
                   style={[
                     styles.dayContainer,
-                    hasConflict && styles.dayContainerConflict,
+                    !isShopOpen && styles.dayContainerDisabled, // Estilo para día cerrado
                   ]}
                 >
                   <View style={styles.dayHeader}>
-                    <Text style={styles.dayName}>
+                    <Text
+                      style={[
+                        styles.dayName,
+                        !isShopOpen && styles.dayNameDisabled,
+                      ]}
+                    >
                       {daysOfWeek[key]}
                     </Text>
                     <Switch
@@ -194,11 +207,17 @@ export default function BarberAvailabilityScreen() {
                       onValueChange={(value) =>
                         handleAvailabilityChange(key, "enabled", value)
                       }
-                      trackColor={{ false: "#767577", true: "#a8dadc" }}
+                      disabled={!isShopOpen} // Desactivar si la tienda está cerrada
+                      trackColor={{ false: "#d1d5db", true: "#a8dadc" }}
                       thumbColor={isBarberEnabled ? "#0052cc" : "#f4f3f4"}
                     />
                   </View>
-                  <Text style={styles.shopHoursText}>
+                  <Text
+                    style={[
+                      styles.shopHoursText,
+                      !isShopOpen && styles.shopHoursTextClosed,
+                    ]}
+                  >
                     Horario de la tienda:{" "}
                     {isShopOpen
                       ? `${dayData.open} - ${dayData.close}`
@@ -255,8 +274,15 @@ export default function BarberAvailabilityScreen() {
           value={
             // Usar la hora existente o la hora de apertura/cierre de la tienda como valor inicial
             new Date(
-              `1970-01-01T${barberAvailability[timePickerConfig.day]?.[timePickerConfig.type] ||
-              shopSettings.working_hours[timePickerConfig.day]?.[timePickerConfig.type] || '09:00'}`
+              `1970-01-01T${
+                barberAvailability[timePickerConfig.day]?.[
+                  timePickerConfig.type
+                ] ||
+                shopSettings.working_hours[timePickerConfig.day]?.[
+                  timePickerConfig.type
+                ] ||
+                "09:00"
+              }`
             )
           }
           mode="time"
@@ -281,17 +307,29 @@ const styles = StyleSheet.create({
     backgroundColor: "#f3f4f6",
   },
   header: {
-    padding: 16,
     paddingTop: 48,
+    paddingBottom: 12,
+    paddingHorizontal: 24,
     backgroundColor: "white",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomWidth: 4,
+    borderBottomColor: "#e63946",
+    borderStyle: "solid",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  titleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
   },
   title: {
-    fontSize: 30,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#1f2937",
-    textAlign: "center",
   },
   scrollView: {
     flex: 1,
@@ -318,9 +356,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9fafb",
     borderColor: "#e5e7eb",
   },
-  dayContainerConflict: {
-    backgroundColor: "#fee2e2",
-    borderColor: "#fca5a5",
+  dayContainerDisabled: {
+    backgroundColor: "#fef2f2", // Rojo muy claro
+    borderColor: "#fecaca", // Borde rojo claro
+  },
+  dayNameDisabled: {
+    color: "#9ca3af", // Texto del día en gris
   },
   dayHeader: {
     flexDirection: "row",
@@ -336,6 +377,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6b7280",
     marginBottom: 8,
+  },
+  shopHoursTextClosed: {
+    color: "#ef4444", // Texto "Cerrado" en rojo
+    fontWeight: "bold",
   },
   timePickerContainer: {
     flexDirection: "row",

@@ -43,6 +43,18 @@ export default function AdminDashboard() {
   console.log(`[AdminDashboard] Has session: ${!!session}`);
   console.log(`[AdminDashboard] Loading state: ${loading}`);
 
+  // Redirección si el usuario no es admin
+  const router = useRouter();
+  useEffect(() => {
+    if (profile && profile.role !== "admin") {
+      Alert.alert(
+        "Acceso Denegado",
+        "No tienes permiso para ver esta sección."
+      );
+      router.replace("/(barber)/BarberDashboard"); // O a la ruta que corresponda
+    }
+  }, [profile]);
+
   useEffect(() => {
     const fetchStats = async () => {
       console.log("[AdminDashboard useEffect] fetchStats triggered.");

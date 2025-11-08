@@ -13,8 +13,7 @@ import {
 import { useSessionStore } from "../../store/sessionStore";
 import api from "../../utils/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-
+import { useRouter } from "expo-router"; // AppointmentDetailModal is not used here
 export default function BarberAppointmentsScreen() {
   const { session } = useSessionStore();
   const [appointments, setAppointments] = useState([]);
@@ -36,11 +35,14 @@ export default function BarberAppointmentsScreen() {
   const fetchAppointments = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/api/appointments/barber/me", { // Ruta unificada para obtener turnos del barbero logueado
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      const response = await api.get(
+        `/api/appointments/barber/${session.user.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
       setAppointments(response.data);
     } catch (error) {
       Alert.alert("Error", "No se pudieron cargar tus citas.");
@@ -89,45 +91,12 @@ export default function BarberAppointmentsScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f3f4f6" }}>
+    <View style={styles.container}>
       {/* --- Header Fijo --- */}
       <View style={styles.header}>
-        <View style={styles.headerTopRow}>
+        <View style={styles.headerTitleContainer}>
+          <Ionicons name="calendar-outline" size={24} color="#0052cc" />
           <Text style={styles.title}>Mis Turnos</Text>
-          <Pressable onPress={fetchAppointments} style={styles.refreshButton}>
-            <Ionicons name="refresh" size={24} color="#0052cc" />
-          </Pressable>
-        </View>
-
-        {/* Filter and Search UI */}
-        <View style={styles.filterSection}>
-          <TextInput
-            placeholder="Buscar por nombre de cliente..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            style={styles.searchInput}
-          />
-          <View style={styles.filterButtonsContainer}>
-            {["Próximas", "Completadas", "Canceladas"].map((status) => (
-              <Pressable
-                key={status}
-                onPress={() => setFilter(status)}
-                style={[
-                  styles.filterButton,
-                  filter === status && styles.filterButtonActive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.filterButtonText,
-                    filter === status && styles.filterButtonTextActive,
-                  ]}
-                >
-                  {status}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
         </View>
       </View>
 
@@ -165,9 +134,7 @@ export default function BarberAppointmentsScreen() {
                   <Text style={styles.clientName}>
                     {item.client?.full_name}
                   </Text>
-                  <Text style={styles.serviceName}>
-                    {item.services?.name}
-                  </Text>
+                  <Text style={styles.serviceName}>{item.services?.name}</Text>
                 </View>
               </View>
 
@@ -182,10 +149,12 @@ export default function BarberAppointmentsScreen() {
                     {item.status}
                   </Text>
                   {item.status === "Completado" && item.notes?.rating && (
-                     <View style={styles.ratingBadge}>
-                        <Ionicons name="star" size={14} color="#f59e0b" />
-                        <Text style={styles.ratingBadgeText}>{item.notes.rating}</Text>
-                     </View>
+                    <View style={styles.ratingBadge}>
+                      <Ionicons name="star" size={14} color="#f59e0b" />
+                      <Text style={styles.ratingBadgeText}>
+                        {item.notes.rating}
+                      </Text>
+                    </View>
                   )}
                 </View>
               </View>
@@ -193,52 +162,46 @@ export default function BarberAppointmentsScreen() {
           )}
         />
       )}
-
-      {selectedAppointment && (
-        <AppointmentDetailModal
-          visible={isDetailVisible}
-          onClose={() => setIsDetailVisible(false)}
-          appointment={selectedAppointment}
-          onAppointmentUpdate={fetchAppointments}
-        />
-      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f3f4f6",
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f3f4f6",
-    padding: 16,
   },
   loadingText: {
     marginTop: 12,
     fontSize: 18,
-    color: "#4b5563",
   },
   header: {
-    padding: 16,
     paddingTop: 48,
+    paddingBottom: 12,
+    paddingHorizontal: 24,
     backgroundColor: "white",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomWidth: 4,
+    borderBottomColor: "#e63946",
+    borderStyle: "solid",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    elevation: 5,
   },
-  headerTopRow: {
+  headerTitleContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    justifyContent: "center",
+    gap: 10,
   },
   title: {
-    fontSize: 30,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#1f2937",
   },
@@ -250,7 +213,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f3f4f6",
     padding: 12,
     borderRadius: 12,
-    marginBottom: 12,
   },
   filterButtonsContainer: {
     flexDirection: "row",
@@ -334,9 +296,9 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   statusContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   statusText: {
     fontSize: 18,
@@ -348,17 +310,17 @@ const styles = StyleSheet.create({
   statusEnProceso: { color: "#16a34a" },
   statusCancelado: { color: "#dc2626" },
   ratingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fef3c7',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fef3c7",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 999,
   },
   ratingBadgeText: {
     marginLeft: 4,
-    color: '#b45309',
-    fontWeight: 'bold',
+    color: "#b45309",
+    fontWeight: "bold",
     fontSize: 14,
   },
   // Added for star display

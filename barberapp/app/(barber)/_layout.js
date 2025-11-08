@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function BarberLayout() {
   return (
@@ -14,6 +14,17 @@ export default function BarberLayout() {
             iconName = "grid-outline";
           } else if (route.name === "BarberAppointments") {
             iconName = "calendar-outline";
+          } else if (route.name === "BarberAvailability") {
+            // Usamos un ícono de MaterialCommunityIcons para el reloj
+            return (
+              <MaterialCommunityIcons
+                name="clock-time-eight-outline"
+                size={size}
+                color={color}
+              />
+            );
+          } else if (route.name === "BarberServices") {
+            iconName = "cut-outline";
           } else if (route.name === "BarberProfile") {
             iconName = "person-outline";
           }
@@ -21,8 +32,14 @@ export default function BarberLayout() {
         },
       })}
     >
+      {/* El orden de los Screen define el orden en la barra de navegación */}
       <Tabs.Screen name="BarberDashboard" options={{ title: "Dashboard" }} />
       <Tabs.Screen name="BarberAppointments" options={{ title: "Turnos" }} />
+      <Tabs.Screen
+        name="BarberAvailability"
+        options={{ title: "Disponibilidad" }}
+      />
+      <Tabs.Screen name="BarberServices" options={{ title: "Servicios" }} />
       <Tabs.Screen name="BarberProfile" options={{ title: "Perfil" }} />
     </Tabs>
   );

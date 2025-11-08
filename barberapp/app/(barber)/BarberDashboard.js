@@ -52,10 +52,13 @@ export default function BarberDashboard() {
       setAppointmentsLoading(true);
       try {
         // Hacemos dos llamadas en paralelo para ser más eficientes
-        const appointmentsRes = await api.get("/api/appointments/barber/me", {
-          // Ruta para obtener los turnos del barbero autenticado.
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
+        const appointmentsRes = await api.get(
+          `/api/appointments/barber/${profile.id}`,
+          {
+            // Ruta para obtener los turnos del barbero autenticado.
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          }
+        );
         console.log(
           "[BarberDashboard] Appointments API response data:",
           appointmentsRes.data
