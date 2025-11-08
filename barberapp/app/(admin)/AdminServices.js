@@ -279,13 +279,13 @@ export default function ServicesManagementScreen() {
                   <Text style={styles.serviceName}>{item.name}</Text>
                   <View style={styles.metaContainer}>
                     <View style={styles.metaItem}>
-                      <Ionicons name="time-outline" size={16} color="#475569" />
+                      <Ionicons name="time-outline" size={16} color="#0052cc" />
                       <Text style={styles.serviceMeta}>
                         {item.duration_minutes} min
                       </Text>
                     </View>
                     <View style={styles.metaItem}>
-                      <Ionicons name="cash-outline" size={16} color="#475569" />
+                      <Ionicons name="cash-outline" size={16} color="#16a34a" />
                       <Text style={styles.serviceMeta}>${item.price}</Text>
                     </View>
                   </View>
