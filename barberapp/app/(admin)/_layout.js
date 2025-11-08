@@ -17,9 +17,9 @@ export default function AdminLayout() {
           } else if (route.name === "AdminProfile") {
             iconName = "person-circle-outline";
           } else if (route.name === "AdminBarbershop") {
-            iconName = "cut-outline"; // Icon for Barbershop
+            iconName = "business-outline"; // Icon for Barbershop
           } else if (route.name === "AdminServices") {
-            iconName = "briefcase-outline"; // Icon for Services
+            iconName = "cut-outline"; // Icon for Services
           } else if (route.name === "AdminAppointments") {
             iconName = "calendar-outline"; // Icon for Appointments
           }
@@ -35,8 +35,22 @@ export default function AdminLayout() {
       <Tabs.Screen name="AdminProfile" options={{ title: "Perfil" }} />
 
       {/* Rutas que no aparecen en el Tab Bar */}
-      <Tabs.Screen name="AdminCompleteProfile" options={{ href: null, tabBarLabel: () => null, tabBarIcon: () => null }} />
-      <Tabs.Screen name="[id]" options={{ href: null, tabBarLabel: () => null, tabBarIcon: () => null }} />
+      <Tabs.Screen
+        name="AdminCompleteProfile"
+        options={{
+          href: null,
+          tabBarLabel: () => null,
+          tabBarIcon: () => null,
+        }}
+      />
+      <Tabs.Screen
+        name="[id]"
+        options={{
+          href: null,
+          tabBarLabel: () => null,
+          tabBarIcon: () => null,
+        }}
+      />
     </Tabs>
   );
 }

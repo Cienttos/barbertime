@@ -6,11 +6,11 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  SafeAreaView, // Import SafeAreaView
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useSessionStore } from "../../store/sessionStore";
-import Header from "../../components/client/Header";
+import { useSession } from "../../hooks/useSession";
 import api from "../../utils/api";
 
 const DashboardCard = ({ title, icon, screen, params = {} }) => {
@@ -27,7 +27,7 @@ const DashboardCard = ({ title, icon, screen, params = {} }) => {
 };
 
 export default function AdminDashboard() {
-  const { profile, session } = useSessionStore();
+  const { profile, session } = useSession();
   const [stats, setStats] = useState({
     totalBarbers: 0,
     totalEarnings: 0,
@@ -112,178 +112,247 @@ export default function AdminDashboard() {
   }, [session]);
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>
-          ¡Hola, {profile?.full_name || "Admin"}!
-        </Text>
-        <Text style={styles.subtitle}>
-          Bienvenido al panel de administración.
-        </Text>
-      </View>
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#0052cc" />
-      ) : (
-        <View style={styles.statsGrid}>
-          <StatCard
-            icon="people"
-            label="Barberos"
-            value={stats.totalBarbers}
-            color="#2563eb"
-          />
-          <StatCard
-            icon="cash"
-            label="Ganancias"
-            value={`$${stats.totalEarnings.toFixed(2)}`}
-            color="#16a34a"
-          />
-          <StatCard
-            icon="hourglass"
-            label="Turnos Próximos"
-            value={stats.upcomingAppointments}
-            color="#f59e0b"
-          />
-          <StatCard
-            icon="checkmark-done"
-            label="Turnos Completados"
-            value={stats.completedAppointments}
-            color="#9333ea"
-          />
-          <StatCard
-            icon="close-circle"
-            label="Turnos Cancelados"
-            value={stats.cancelledAppointments}
-            color="#e11d48"
-          />
-          <StatCard
-            icon="star"
-            label="Calificación Prom."
-            value={stats.averageRating}
-            color="#0f766e"
-          />
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+      >
+        <View style={styles.header}>
+          <View style={styles.headerTopRow}>
+            <Text style={styles.panelTitle}>Admin Panel</Text>
+            <Ionicons
+              name="shield-checkmark-outline"
+              size={20}
+              color="#ffffff" // Blanco para el escudo
+            />
+          </View>
+          <Text style={styles.welcomeTitle}>Bienvenido de nuevo,</Text>
+          <Text style={styles.welcomeName}>
+            {profile?.full_name || "Admin"}
+          </Text>
         </View>
-      )}
 
-      <View style={styles.divider} />
+        {loading ? (
+          <ActivityIndicator size="large" color="#0052cc" />
+        ) : (
+          <>
+            <View style={styles.statsGrid}>
+              <StatCard
+                icon="people"
+                label="Barberos"
+                value={stats.totalBarbers}
+                color="#0052cc" // Blue
+              />
+              <StatCard
+                icon="cash"
+                label="Ganancias"
+                value={`$${stats.totalEarnings.toFixed(2)}`}
+                color="#16a34a" // Green
+              />
+              <StatCard
+                icon="hourglass"
+                label="Turnos Próximos"
+                value={stats.upcomingAppointments}
+                color="#f59e0b" // Amber
+              />
+              <StatCard
+                icon="checkmark-done"
+                label="Turnos Completados"
+                value={stats.completedAppointments}
+                color="#9333ea"
+              />
+              <StatCard
+                icon="close-circle"
+                label="Turnos Cancelados"
+                value={stats.cancelledAppointments}
+                color="#e63946" // Red
+              />
+              <StatCard
+                icon="star"
+                label="Calificación Prom."
+                value={stats.averageRating}
+                color="#9333ea" // Purple
+              />
+            </View>
 
-      <View style={styles.actionsGrid}>
-        <DashboardCard
-          title="Gestionar Barbería"
-          icon="business-outline"
-          screen="/(admin)/AdminBarbershop"
-        />
-        <DashboardCard
-          title="Gestionar Usuarios"
-          icon="people-outline"
-          screen="/(admin)/AdminUsers"
-        />
-        <DashboardCard
-          title="Gestionar Servicios"
-          icon="cut-outline"
-          screen="/(admin)/AdminServices"
-        />
-      </View>
-    </ScrollView>
+            <View style={styles.divider} />
+
+            <View style={styles.actionsGrid}>
+              <DashboardCard
+                title="Gestionar Barbería"
+                icon="business-outline"
+                screen="/(admin)/AdminBarbershop"
+              />
+              <DashboardCard
+                title="Gestionar Usuarios"
+                icon="people-outline"
+                screen="/(admin)/AdminUsers"
+              />
+              <DashboardCard
+                title="Gestionar Servicios"
+                icon="cut-outline"
+                screen="/(admin)/AdminServices"
+              />
+              <DashboardCard
+                title="Gestionar Turnos"
+                icon="calendar-outline"
+                screen="/(admin)/AdminAppointments"
+              />
+            </View>
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-const StatCard = ({ icon, label, value, color }) => (
-  <View style={[styles.statCard, { borderLeftColor: color }]}>
-    <View>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
+const StatCard = ({ icon, label, value, color }) => {
+  return (
+    <View style={styles.statCard}>
+      <View style={styles.statCardContent}>
+        <Ionicons name={icon} size={28} color={color} />
+        <Text style={[styles.statValue, { color: color }]}>{value}</Text>
+        <Text style={styles.statLabel}>{label}</Text>
+      </View>
+      <View style={styles.cardFooter}>
+        <View style={[styles.footerStripe, { backgroundColor: "#e63946" }]} />
+        <View style={[styles.footerStripe, { backgroundColor: "#ffffff" }]} />
+        <View style={[styles.footerStripe, { backgroundColor: "#0052cc" }]} />
+      </View>
     </View>
-    <Ionicons name={icon} size={32} color={color} />
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    padding: 24,
     backgroundColor: "#f9fafb",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    paddingHorizontal: 24,
+    paddingTop: 48, // Aumentado para bajar más el contenido
+    paddingBottom: 48,
   },
   header: {
     marginBottom: 32,
   },
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    color: "#1f2937",
+  headerTopRow: {
+    flexDirection: "row",
+    alignSelf: "center", // Centra el chip en el contenedor
+    alignItems: "center",
+    backgroundColor: "#0052cc", // Fondo azul
+    borderRadius: 999, // Bordes completamente redondeados (píldora)
+    paddingVertical: 6, // Reducido para achicar el chip
+    paddingHorizontal: 14,
+    marginBottom: 24,
+    gap: 8,
   },
-  subtitle: {
-    fontSize: 18,
+  panelTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#ffffff", // Texto blanco
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  welcomeTitle: {
+    fontSize: 28,
     color: "#4b5563",
-    marginTop: 4,
+  },
+  welcomeName: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#e63946", // Color rojo para el nombre
+    marginTop: -4, // Ajuste para que se vea más integrado
   },
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 32,
+    marginHorizontal: -8, // Compensate for card margin
   },
   statCard: {
     backgroundColor: "white",
     borderRadius: 12,
-    padding: 16,
-    width: "48%",
+    width: "30%", // Three cards per row
     marginBottom: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderLeftWidth: 5,
     shadowColor: "#1e293b",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    overflow: "hidden", // Para que el footer no se salga del borde redondeado
+    flexDirection: "column", // Asegura que los hijos se apilen verticalmente
+    justifyContent: "space-between", // Empuja el footer hacia abajo
   },
-  statLabel: {
-    fontSize: 14,
-    color: "#64748b",
-    fontWeight: "500",
+  statCardContent: {
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1, // Permite que este contenedor crezca y ocupe el espacio disponible
+  },
+  cardFooter: {
+    height: 6, // Altura total de 6px
+    width: "100%",
+    flexDirection: "column", // Para apilar las franjas verticalmente
+  },
+  footerStripe: {
+    flex: 1, // Cada franja toma 1/3 de la altura (2px cada una)
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
-    color: "#1e293b",
-    marginTop: 4,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#64748b",
+    fontWeight: "500",
+    textAlign: "center",
   },
   divider: {
     width: "100%",
     borderTopWidth: 1,
     borderTopColor: "#d1d5db",
-    marginVertical: 24,
+    marginVertical: 32,
   },
   actionsGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "100%",
+    flexWrap: "wrap",
+    marginHorizontal: -8, // Compensate for card margin
   },
   card: {
     backgroundColor: "white",
-    padding: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 10,
     borderRadius: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 3,
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
-    marginHorizontal: 6,
+    width: "48%", // Two cards per row
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: "#e2e8f0",
   },
   cardPressed: {
     backgroundColor: "#f1f5f9",
+    transform: [{ scale: 0.98 }],
   },
   cardTitle: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#374151",
+    color: "#e63946", // Texto rojo como solicitado
     marginTop: 8,
     textAlign: "center",
   },

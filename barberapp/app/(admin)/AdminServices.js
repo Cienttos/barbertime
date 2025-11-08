@@ -98,7 +98,11 @@ const AddServiceForm = ({ session, onServiceAdded }) => {
             pressed && !isCreating && styles.buttonPressed,
           ]}
         >
-          {isCreating ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>Añadir Servicio</Text>}
+          {isCreating ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.buttonText}>Añadir Servicio</Text>
+          )}
         </Pressable>
       </View>
     </View>
@@ -250,8 +254,18 @@ export default function ServicesManagementScreen() {
         <View style={[styles.card, styles.listCard]}>
           <View style={styles.listHeader}>
             <Text style={styles.cardTitle}>Lista de Servicios</Text>
-            <Pressable onPress={fetchServices} style={({ pressed }) => [styles.refreshButton, pressed && styles.buttonPressed]}>
-              {loading ? <ActivityIndicator color="#457b9d" /> : <Ionicons name="refresh-outline" size={24} color="#457b9d" />}
+            <Pressable
+              onPress={fetchServices}
+              style={({ pressed }) => [
+                styles.refreshButton,
+                pressed && styles.buttonPressed,
+              ]}
+            >
+              {loading ? (
+                <ActivityIndicator color="#457b9d" />
+              ) : (
+                <Ionicons name="refresh-outline" size={24} color="#457b9d" />
+              )}
             </Pressable>
           </View>
 
@@ -297,7 +311,9 @@ export default function ServicesManagementScreen() {
             ItemSeparatorComponent={() => <View style={styles.separator} />}
             ListEmptyComponent={() => (
               <View style={styles.emptyListContainer}>
-                <Text style={styles.emptyListText}>No hay servicios para mostrar.</Text>
+                <Text style={styles.emptyListText}>
+                  No hay servicios para mostrar.
+                </Text>
               </View>
             )}
           />
@@ -431,17 +447,17 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   addServiceCard: {
-    padding: 0
+    padding: 0,
   },
   addServiceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: "#e5e7eb",
   },
   formContent: {
     padding: 16,
@@ -452,14 +468,14 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   listHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: "#e5e7eb",
   },
   refreshButton: {
     padding: 4,
@@ -534,19 +550,19 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: "#e5e7eb",
     marginHorizontal: 16,
   },
   emptyListContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   emptyListText: {
     fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
+    color: "#6b7280",
+    textAlign: "center",
   },
 });
 
@@ -594,7 +610,7 @@ const modalStyles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: "white",
   },
-actionsContainer: {
+  actionsContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
     width: "100%",
