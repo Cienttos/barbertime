@@ -77,39 +77,30 @@ export default function BookAppointmentScreen() {
   const { session, profile } = useSessionStore();
   const router = useRouter();
 
-  useEffect(() => {
-    if (profile?.role === "admin") {
-      Alert.alert(
-        "Acceso Denegado",
-        "Los administradores no pueden reservar turnos."
-      );
-      router.replace("/"); // Redirect to home or another appropriate screen
-    }
-  }, [profile, router]);
+  const resetBookingState = () => {
+    setSelectedService(null);
+    setSelectedBarber(null);
+    setSelectedDate(new Date());
+    setSelectedSlot(null);
+    setTimeSlots([]);
+    setCurrentStep(1);
+    setIsCalendarVisible(true);
+  };
 
   const [services, setServices] = useState([]);
   const [barbers, setBarbers] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
   const [selectedBarber, setSelectedBarber] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [availableSlots, setAvailableSlots] = useState([]);
+  const [timeSlots, setTimeSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [shopSettings, setShopSettings] = useState({ blocked_dates: [] });
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
+  const [slotsLoading, setSlotsLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentStep, setCurrentStep] = useState(1); // 1: Service, 2: Barber, 3: Date/Time
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
-
-  const resetBookingState = () => {
-    setSelectedService(null);
-    setSelectedBarber(null);
-    setSelectedDate(new Date());
-    setSelectedSlot(null);
-    setAvailableSlots([]);
-    setCurrentStep(1);
-    setIsCalendarVisible(true);
-  };
 
   useFocusEffect(
     React.useCallback(() => {
@@ -166,23 +157,32 @@ export default function BookAppointmentScreen() {
   };
 
   const isDateBlocked = (date) => {
+    if (!date) return true;
     const dateString = date.toISOString().split("T")[0];
-    return shopSettings.blocked_dates.includes(dateString);
+    // Comprueba tanto las fechas bloqueadas generales como las específicas del barbero.
+    const generalBlocked = shopSettings.blocked_dates?.includes(dateString);
+    const barberBlocked =
+      selectedBarber?.extra_data?.blocked_dates?.includes(dateString);
+
+    return generalBlocked || barberBlocked;
   };
 
   const fetchAvailableSlots = async () => {
     if (!selectedBarber || !selectedDate || !selectedService) return;
-    setAvailableSlots([]); // Clear previous slots
+    setTimeSlots([]); // Clear previous slots
+    setSlotsLoading(true);
 
     const dateString = DateTime.fromJSDate(selectedDate).toISODate();
-    if (isDateBlocked(selectedDate)) return;
-
+    if (isDateBlocked(selectedDate)) {
+      setSlotsLoading(false);
+      return;
+    }
     try {
       const response = await api.get(
         `/api/public/barbers/${selectedBarber.id}/available-slots`,
         { params: { date: dateString, serviceId: selectedService.id } }
       );
-      setAvailableSlots(response.data);
+      setTimeSlots(response.data);
     } catch (error) {
       Alert.alert(
         "Error",
@@ -191,6 +191,8 @@ export default function BookAppointmentScreen() {
         }`
       );
       console.error("Error fetching slots:", error.response?.data || error);
+    } finally {
+      setSlotsLoading(false);
     }
   };
 
@@ -208,7 +210,8 @@ export default function BookAppointmentScreen() {
     try {
       const appointmentDate = DateTime.fromJSDate(selectedDate).toISODate();
       const startTime = selectedSlot;
-      const endTime = DateTime.fromISO(startTime)
+      const startDateTime = DateTime.fromISO(`${appointmentDate}T${startTime}`);
+      const endTime = startDateTime
         .plus({ minutes: selectedService.duration_minutes })
         .toFormat("HH:mm:ss");
 
@@ -247,11 +250,9 @@ export default function BookAppointmentScreen() {
     }
   };
 
-  const filteredBarbers = selectedService
-    ? barbers.filter((b) =>
-        b.extra_data?.services?.includes(selectedService.id)
-      )
-    : [];
+  const filteredBarbers = selectedService // Si hay un servicio seleccionado...
+    ? barbers.filter((b) => b.extra_data?.offered_services?.includes(selectedService.id)) // ...filtramos los barberos que lo ofrecen.
+    : barbers; // Si no, mostramos todos los barberos.
 
   const getMarkedDates = () => {
     const marked = {};
@@ -260,6 +261,14 @@ export default function BookAppointmentScreen() {
     });
 
     if (selectedBarber?.extra_data?.availability) {
+      // Add barber-specific blocked dates
+      if (selectedBarber.extra_data.blocked_dates) {
+        selectedBarber.extra_data.blocked_dates.forEach((date) => {
+          marked[date] = { disabled: true, disableTouchEvent: true };
+        });
+      }
+
+      // Disable days the barber doesn't work
       const availability = selectedBarber.extra_data.availability;
       const today = DateTime.now().startOf("day");
       for (let i = 0; i < 365; i++) {
@@ -297,16 +306,25 @@ export default function BookAppointmentScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{ title: "Reservar Turno", headerBackTitle: "Atrás" }}
-      />
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Ionicons name="add-circle-outline" size={28} color="#1e293b" />
+          <Text style={styles.headerTitle}>Reservar Turno</Text>
+        </View>
+      </View>
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
+        <View style={{ paddingTop: 24 }}>
+
+
         {/* --- Step 1: Select Service --- */}
         {currentStep === 1 && (
           <View style={styles.stepContainer}>
+            <View style={styles.stepHeader}>
+              <Text style={styles.stepHeaderText}>Paso 1: Elige un Servicio</Text>
+            </View>
             <View>
               {services.map((item, index) => (
                 <Pressable
@@ -362,6 +380,9 @@ export default function BookAppointmentScreen() {
         {/* --- Step 2: Select Barber --- */}
         {currentStep === 2 && (
           <View style={styles.stepContainer}>
+            <View style={styles.stepHeader}>
+              <Text style={styles.stepHeaderText}>Paso 2: Elige un Barbero</Text>
+            </View>
             <FlatList
               horizontal
               data={filteredBarbers}
@@ -416,6 +437,9 @@ export default function BookAppointmentScreen() {
         {/* --- Step 3: Select Date & Time --- */}
         {currentStep === 3 && (
           <View style={styles.stepContainer}>
+            <View style={styles.stepHeader}>
+              <Text style={styles.stepHeaderText}>Paso 3: Elige Fecha y Hora</Text>
+            </View>
             {isCalendarVisible ? (
               <BlurView
                 intensity={50}
@@ -456,50 +480,59 @@ export default function BookAppointmentScreen() {
                 >
                   <Text style={styles.changeDateButtonText}>Cambiar Fecha</Text>
                 </Pressable>
-                {availableSlots.length > 0 ? (
+                {timeSlots.length > 0 ? (
                   <View style={styles.slotsContainer}>
                     <View style={styles.slotsHeader}>
                       <Text style={styles.slotsTitle}>
                         Horarios Disponibles
                       </Text>
-                      <Pressable
-                        onPress={fetchAvailableSlots}
-                        style={styles.refreshSlotsButton}
-                      >
-                        <Ionicons name="refresh" size={22} color="#3B82F6" />
-                      </Pressable>
+                      <View style={styles.refreshButtonContainer}>
+                        {slotsLoading ? (
+                          <ActivityIndicator size="small" color="#3B82F6" />
+                        ) : (
+                          <Pressable
+                            // Botón de recarga con indicador de carga
+                            onPress={fetchAvailableSlots}
+                            style={styles.refreshSlotsButton}
+                          >
+                            <Ionicons name="refresh" size={22} color="#3B82F6" />
+                          </Pressable>
+                        )}
+                      </View>
                     </View>
                     <Text style={styles.currentTimeText}>
                       Hora actual:{" "}
                       {DateTime.fromJSDate(currentTime).toFormat("HH:mm")}
                     </Text>
                     <View style={styles.slotsGrid}>
-                      {availableSlots.map((slot) => {
-                        const isSelected = selectedSlot === slot;
+                      {timeSlots.map((slot) => {
+                        const isSelected = selectedSlot === slot.time;
                         const startTime = DateTime.fromISO(
                           `${DateTime.fromJSDate(
                             selectedDate
-                          ).toISODate()}T${slot}`
+                          ).toISODate()}T${slot.time}`
                         );
                         const isPast = startTime < DateTime.now();
+                        const isBooked = slot.status === "booked";
+                        const isDisabled = isPast || isBooked;
                         const endTime = startTime.plus({
                           minutes: selectedService.duration_minutes,
                         });
                         return (
                           <Pressable
-                            key={slot}
-                            onPress={() => !isPast && setSelectedSlot(slot)}
-                            disabled={isPast}
+                            key={slot.time}
+                            onPress={() => !isDisabled && setSelectedSlot(slot.time)}
+                            disabled={isDisabled}
                             style={[
                               styles.slotButton,
-                              isPast && styles.slotButtonPast,
+                              isDisabled && styles.slotButtonPast,
                               isSelected && styles.slotButtonSelected,
                             ]}
                           >
                             <Text
                               style={[
                                 styles.slotText,
-                                isPast && styles.slotTextPast,
+                                isDisabled && styles.slotTextPast,
                                 isSelected && styles.slotButtonSelectedText,
                               ]}
                             >
@@ -512,17 +545,21 @@ export default function BookAppointmentScreen() {
                     </View>
                   </View>
                 ) : (
-                  <View style={styles.emptyListContainer}>
-                    <Ionicons name="time-outline" size={32} color="#9CA3AF" />
-                    <Text style={styles.emptyListText}>
-                      No hay horarios disponibles para este día.
-                    </Text>
-                  </View>
+                  // Muestra el loader si está cargando, si no, el mensaje de que no hay horarios.
+                  slotsLoading ? (
+                    <ActivityIndicator style={{ marginTop: 20 }} size="large" color="#3B82F6" />
+                  ) : (
+                    <View style={styles.emptyListContainer}>
+                      <Ionicons name="time-outline" size={32} color="#9CA3AF" />
+                      <Text style={styles.emptyListText}>No hay horarios disponibles para este día.</Text>
+                    </View>
+                  )
                 )}
               </View>
             )}
           </View>
         )}
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -601,6 +638,39 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 8,
     color: "#475569",
+  },
+  header: {
+    paddingTop: 60, // Increased padding to avoid status bar
+    paddingBottom: 16,
+    paddingHorizontal: 24,
+    backgroundColor: "white",
+    borderBottomWidth: 3,
+    borderBottomColor: "#e63946",
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1e293b",
+    marginLeft: 10,
+  },
+  stepHeader: {
+    backgroundColor: "#0052cc", // Cambiado a azul primario
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  stepHeaderText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
   },
   stepContainer: {
     marginBottom: 24,
@@ -754,6 +824,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     paddingHorizontal: 8,
   },
+  refreshButtonContainer: {
+    width: 30, // Ancho fijo para evitar que el layout salte
+    alignItems: "center",
+    paddingHorizontal: 8,
+  },
   slotsTitle: {
     fontSize: 18,
     fontWeight: "600",
@@ -783,11 +858,11 @@ const styles = StyleSheet.create({
     borderColor: "#457b9d",
   },
   slotButtonPast: {
-    backgroundColor: "rgba(200, 200, 200, 0.5)",
-    borderColor: "#999",
+    backgroundColor: "#e5e7eb",
+    borderColor: "#d1d5db",
   },
   slotButtonSelected: {
-    backgroundColor: "#e63946",
+    backgroundColor: "#0052cc",
     borderColor: "#a12831",
   },
   slotText: {
@@ -795,7 +870,7 @@ const styles = StyleSheet.create({
     color: "#0052cc",
   },
   slotTextPast: {
-    color: "#666",
+    color: "#9ca3af",
     textDecorationLine: "line-through",
   },
   slotButtonSelectedText: {
@@ -824,25 +899,9 @@ const styles = StyleSheet.create({
   disabledButton: {
     backgroundColor: "#9ca3af",
   },
-  header: {
-    paddingTop: 42, // Increased padding to avoid status bar
-    paddingBottom: 12,
-    paddingHorizontal: 16,
-    backgroundColor: "white",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
-    alignItems: "center",
-    marginBottom: 10, // Added margin to separate from content
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#1e293b",
-  },
   scrollContainer: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingHorizontal: 24, // Padding horizontal para el contenido
   },
   footer: {
     position: "absolute",

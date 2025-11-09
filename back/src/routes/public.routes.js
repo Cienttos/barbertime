@@ -12,4 +12,10 @@ router.get("/barbers", publicController.getBarbers);
 // @desc    Obtiene la lista de servicios
 router.get("/services", publicController.getServices);
 
+// @desc    Obtiene los horarios disponibles para un barbero en una fecha específica
+router.get(
+  "/barbers/:barberId/available-slots",
+  publicController.getAvailableSlotsForBarber
+);
+
 export default router;

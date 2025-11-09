@@ -101,9 +101,10 @@ export default function AppointmentsScreen() {
   const handleSaveRating = async (rating, comment) => {
     if (!selectedAppointment) return;
     try {
-      await api.put(
-        `/api/appointments/${selectedAppointment.id}/notes`, { rating, review_comment: comment }
-      );
+      await api.put(`/api/appointments/${selectedAppointment.id}/notes`, {
+        rating,
+        review_comment: comment,
+      });
       Alert.alert("Éxito", "Gracias por tu calificación.");
       setIsRatingVisible(false);
       fetchAppointments(); // Refresh appointments to show new rating
@@ -131,247 +132,274 @@ export default function AppointmentsScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.title}>
-          {profile?.role === "admin" ? "Todos los Turnos" : "Mis Turnos"}
-        </Text>
-        <Pressable onPress={fetchAppointments} style={styles.refreshButton}>
-          <Ionicons name="refresh" size={24} color="#457b9d" />
-        </Pressable>
-      </View>
-
-      {/* Filter and Search UI */}
-      <View style={styles.filterContainer}>
-        <TextInput
-          placeholder="Buscar por cliente, barbero o servicio..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={styles.searchInput}
-        />
-        <View style={styles.filterButtonsContainer}>
-          {["Próximas", "Completadas", "Canceladas"].map((status) => (
-            <Pressable
-              key={status}
-              onPress={() => setFilter(status)}
-              style={[
-                styles.filterButton,
-                filter === status && styles.filterButtonActive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.filterButtonText,
-                  filter === status && styles.filterButtonTextActive,
-                ]}
-              >
-                {status}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-
-      {filteredAppointments.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="calendar-outline" size={60} color="#a8dadc" />
-          <Text style={styles.emptyText}>
-            No se encontraron citas con los filtros actuales.
+    <>
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Ionicons name="calendar-outline" size={28} color="#1e293b" />
+          <Text style={styles.headerTitle}>
+            {profile?.role === "admin" ? "Todos los Turnos" : "Mis Turnos"}
           </Text>
         </View>
-      ) : (
-        <FlatList
-          data={filteredAppointments}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => {
-            if (profile?.role === "admin") {
-              // Admin View Card
+      </View>
+      <View style={styles.container}>
+        {/* Filter and Search UI */}
+        <View style={styles.filterContainer}>
+          <TextInput
+            placeholder="Buscar por cliente, barbero o servicio..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={styles.searchInput}
+          />
+          <View style={styles.filterButtonsContainer}>
+            {["Próximas", "Completadas", "Canceladas"].map((status) => (
+              <Pressable
+                key={status}
+                onPress={() => setFilter(status)}
+                style={[
+                  styles.filterButton,
+                  filter === status && styles.filterButtonActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.filterButtonText,
+                    filter === status && styles.filterButtonTextActive,
+                  ]}
+                >
+                  {status}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        {filteredAppointments.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="calendar-outline" size={60} color="#a8dadc" />
+            <Text style={styles.emptyText}>
+              No se encontraron citas con los filtros actuales.
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredAppointments}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => {
+              if (profile?.role === "admin") {
+                // Admin View Card
+                return (
+                  <Pressable
+                    onPress={() => openDetailModal(item)}
+                    style={({ pressed }) => [
+                      styles.appointmentCard,
+                      styles.adminAppointmentCard,
+                      pressed && styles.appointmentCardPressed,
+                    ]}
+                  >
+                    {/* Admin Card Layout - Redesigned */}
+                    <View style={styles.adminCardTopSection}>
+                      <View style={styles.adminCardRow}>
+                        <Image
+                          source={{
+                            uri:
+                              item.client?.avatar_url ||
+                              `https://ui-avatars.com/api/?name=${
+                                item.client?.full_name || item.client?.email
+                              }&background=random`,
+                          }}
+                          style={styles.adminAvatar}
+                        />
+                        <View style={styles.adminInfoColumn}>
+                          <Text style={styles.adminLabel}>Cliente</Text>
+                          <Text style={styles.adminName} numberOfLines={1}>
+                            {item.client?.full_name || "Cliente"}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={styles.adminCardRow}>
+                        <Image
+                          source={{
+                            uri:
+                              item.barber?.avatar_url ||
+                              `https://ui-avatars.com/api/?name=${
+                                item.barber?.full_name || item.barber?.email
+                              }&background=random`,
+                          }}
+                          style={styles.adminAvatar}
+                        />
+                        <View style={styles.adminInfoColumn}>
+                          <Text style={styles.adminLabel}>Barbero</Text>
+                          <Text style={styles.adminName} numberOfLines={1}>
+                            {item.barber?.full_name || "Barbero"}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <View style={styles.adminDetailsDivider} />
+                    <View style={styles.adminCardBottomSection}>
+                      <View style={{ flex: 1 }}>
+                        <View style={styles.adminDetailItem}>
+                          <Ionicons
+                            name="cut-outline"
+                            size={18}
+                            color="#457b9d"
+                          />
+                          <Text
+                            style={styles.adminServiceText}
+                            numberOfLines={1}
+                          >
+                            {item.services?.name}
+                          </Text>
+                        </View>
+                        <View style={styles.adminDetailItem}>
+                          <Ionicons
+                            name="calendar-outline"
+                            size={18}
+                            color="#457b9d"
+                          />
+                          <Text style={styles.adminServiceText}>
+                            {DateTime.fromISO(item.appointment_date)
+                              .setLocale("es")
+                              .toFormat("dd 'de' MMMM")}{" "}
+                            a las {item.start_time.substring(0, 5)}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={styles.adminPriceContainer}>
+                        <Text style={styles.adminPrice}>
+                          ${item.price ?? item.services?.price}
+                        </Text>
+                      </View>
+                    </View>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        styles[`status${item.status.replace(" ", "")}`],
+                      ]}
+                    >
+                      <Text style={styles.statusBadgeText}>{item.status}</Text>
+                    </View>
+                  </Pressable>
+                );
+              }
+              // Client View Card (Simplified, similar to Barber's)
               return (
                 <Pressable
                   onPress={() => openDetailModal(item)}
                   style={({ pressed }) => [
                     styles.appointmentCard,
-                    styles.adminAppointmentCard,
                     pressed && styles.appointmentCardPressed,
                   ]}
                 >
-                  {/* Admin Card Layout - Redesigned */}
-                  <View style={styles.adminCardTopSection}>
-                    <View style={styles.adminCardRow}>
-                      <Image
-                        source={{
-                          uri:
-                            item.client?.avatar_url ||
-                            `https://ui-avatars.com/api/?name=${
-                              item.client?.full_name || item.client?.email
-                            }&background=random`,
-                        }}
-                        style={styles.adminAvatar}
-                      />
-                      <View style={styles.adminInfoColumn}>
-                        <Text style={styles.adminLabel}>Cliente</Text>
-                        <Text style={styles.adminName} numberOfLines={1}>
-                          {item.client?.full_name || "Cliente"}
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={styles.adminCardRow}>
-                      <Image
-                        source={{
-                          uri:
-                            item.barber?.avatar_url ||
-                            `https://ui-avatars.com/api/?name=${
-                              item.barber?.full_name || item.barber?.email
-                            }&background=random`,
-                        }}
-                        style={styles.adminAvatar}
-                      />
-                      <View style={styles.adminInfoColumn}>
-                        <Text style={styles.adminLabel}>Barbero</Text>
-                        <Text style={styles.adminName} numberOfLines={1}>
-                          {item.barber?.full_name || "Barbero"}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.adminDetailsDivider} />
-                  <View style={styles.adminCardBottomSection}>
-                    <View style={{ flex: 1 }}>
-                      <View style={styles.adminDetailItem}>
-                        <Ionicons
-                          name="cut-outline"
-                          size={18}
-                          color="#457b9d"
-                        />
-                        <Text style={styles.adminServiceText} numberOfLines={1}>
-                          {item.services?.name}
-                        </Text>
-                      </View>
-                      <View style={styles.adminDetailItem}>
+                  <View style={styles.cardHeader}>
+                    <Image
+                      source={{
+                        uri:
+                          item.barber?.avatar_url ||
+                          `https://ui-avatars.com/api/?name=${item.barber?.full_name}`,
+                      }}
+                      style={styles.barberAvatar}
+                    />
+                    <View>
+                      <Text style={styles.serviceName}>
+                        {item.services?.name}
+                      </Text>
+                      <Text style={styles.barberName}>
+                        con {item.barber?.full_name}
+                      </Text>
+                      <Text style={styles.appointmentDateTime}>
                         <Ionicons
                           name="calendar-outline"
-                          size={18}
-                          color="#457b9d"
-                        />
-                        <Text style={styles.adminServiceText}>
-                          {DateTime.fromISO(item.appointment_date)
-                            .setLocale("es")
-                            .toFormat("dd 'de' MMMM")}{" "}
-                          a las {item.start_time.substring(0, 5)}
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={styles.adminPriceContainer}>
-                      <Text style={styles.adminPrice}>
-                        ${item.price ?? item.services?.price}
+                          size={14}
+                          color="#6b7280"
+                        />{" "}
+                        {DateTime.fromISO(item.appointment_date)
+                          .setLocale("es")
+                          .toFormat("dd MMM")}{" "}
+                        <Ionicons
+                          name="time-outline"
+                          size={14}
+                          color="#6b7280"
+                        />{" "}
+                        {item.start_time.substring(0, 5)} -{" "}
+                        {item.end_time.substring(0, 5)}
                       </Text>
                     </View>
                   </View>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      styles[`status${item.status.replace(" ", "")}`],
-                    ]}
-                  >
-                    <Text style={styles.statusBadgeText}>{item.status}</Text>
+                  <View style={styles.cardFooter}>
+                    <View style={styles.statusContainer}>
+                      <Text
+                        style={[
+                          styles.statusText,
+                          styles[`status${item.status.replace(" ", "")}`],
+                        ]}
+                      >
+                        {item.status}
+                      </Text>
+                      {item.status === "Completado" && item.notes?.rating && (
+                        <View style={styles.ratingBadge}>
+                          <Ionicons name="star" size={14} color="#f59e0b" />
+                          <Text style={styles.ratingBadgeText}>
+                            {item.notes.rating}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
                 </Pressable>
               );
-            }
-            // Client View Card (Simplified, similar to Barber's)
-            return (
-              <Pressable
-                onPress={() => openDetailModal(item)}
-                style={({ pressed }) => [
-                  styles.appointmentCard,
-                  pressed && styles.appointmentCardPressed,
-                ]}
-              >
-                <View style={styles.cardHeader}>
-                  <Image
-                    source={{
-                      uri:
-                        item.barber?.avatar_url ||
-                        `https://ui-avatars.com/api/?name=${item.barber?.full_name}`,
-                    }}
-                    style={styles.barberAvatar}
-                  />
-                  <View>
-                    <Text style={styles.serviceName}>
-                      {item.services?.name}
-                    </Text>
-                    <Text style={styles.barberName}>
-                      con {item.barber?.full_name}
-                    </Text>
-                    <Text style={styles.appointmentDateTime}>
-                      <Ionicons
-                        name="calendar-outline"
-                        size={14}
-                        color="#6b7280"
-                      />{" "}
-                      {DateTime.fromISO(item.appointment_date)
-                        .setLocale("es")
-                        .toFormat("dd MMM")}{" "}
-                      <Ionicons name="time-outline" size={14} color="#6b7280" />{" "}
-                      {item.start_time.substring(0, 5)} -{" "}
-                      {item.end_time.substring(0, 5)}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.cardFooter}>
-                  <View style={styles.statusContainer}>
-                    <Text
-                      style={[
-                        styles.statusText,
-                        styles[`status${item.status.replace(" ", "")}`],
-                      ]}
-                    >
-                      {item.status}
-                    </Text>
-                    {item.status === "Completado" && item.notes?.rating && (
-                      <View style={styles.ratingBadge}>
-                        <Ionicons name="star" size={14} color="#f59e0b" />
-                        <Text style={styles.ratingBadgeText}>
-                          {item.notes.rating}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              </Pressable>
-            );
-          }}
-        />
-      )}
+            }}
+          />
+        )}
 
-      {selectedAppointment && (
-        <AppointmentDetailModal
-          visible={isDetailVisible}
-          onClose={() => setIsDetailVisible(false)}
-          appointment={selectedAppointment} // Pass the selected appointment
-          onRatePress={() => {
-            setIsDetailVisible(false);
-            setIsRatingVisible(true);
-          }} // Function to open rating modal
-          onAppointmentUpdate={fetchAppointments} // Pass function to refresh list after cancellation
-        />
-      )}
+        {selectedAppointment && (
+          <AppointmentDetailModal
+            visible={isDetailVisible}
+            onClose={() => setIsDetailVisible(false)}
+            appointment={selectedAppointment} // Pass the selected appointment
+            onRatePress={() => {
+              setIsDetailVisible(false);
+              setIsRatingVisible(true);
+            }} // Function to open rating modal
+            onAppointmentUpdate={fetchAppointments} // Pass function to refresh list after cancellation
+          />
+        )}
 
-      {/* Rating Modal is now separate */}
-      <RatingModal
-        visible={isRatingVisible}
-        onClose={() => setIsRatingVisible(false)}
-        onSubmit={handleSaveRating}
-      />
-    </View>
+        {/* Rating Modal is now separate */}
+        <RatingModal
+          visible={isRatingVisible}
+          onClose={() => setIsRatingVisible(false)}
+          onSubmit={handleSaveRating}
+        />
+      </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  header: {
+    paddingTop: 60, // Increased padding to avoid status bar
+    paddingBottom: 16,
+    paddingHorizontal: 24,
+    backgroundColor: "white",
+    borderBottomWidth: 3,
+    borderBottomColor: "#e63946",
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1e293b",
+    marginLeft: 10,
+  },
   container: {
     flex: 1,
     backgroundColor: "#f1f5f9",
-    padding: 16,
+    padding: 24,
   },
   loadingContainer: {
     flex: 1,

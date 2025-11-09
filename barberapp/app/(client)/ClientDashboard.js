@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Text,
 } from "react-native";
-import { useFocusEffect } from "expo-router";
 import Header from "../../components/client/Header";
 import ReserveButton from "../../components/client/ReserveButton";
 import WorkingHours from "../../components/client/WorkingHours";
@@ -15,6 +14,7 @@ import Services from "../../components/client/Services";
 import SocialMedia from "../../components/client/SocialMedia";
 import api from "../../utils/api";
 import { useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 
 export default function ClientDashboard() {
   const [shopData, setShopData] = useState({
@@ -61,8 +61,14 @@ export default function ClientDashboard() {
 
   return (
     <ScrollView style={styles.background} showsVerticalScrollIndicator={false}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Inicio</Text>
+        {/* Puedes agregar un ícono aquí si lo deseas */}
+      </View>
       <View style={styles.container}>
-        <Header shopSettings={shopData.shopSettings} />
+        {/* El componente Header original se puede reutilizar para el contenido si es necesario,
+            o puedes integrar su lógica directamente aquí. Por ahora, lo comento. */}
+        {/* <Header shopSettings={shopData.shopSettings} /> */}
         <ReserveButton />
         <WorkingHours shopSettings={shopData.shopSettings} />
         <Barbers barbers={shopData.barbers} />
@@ -74,7 +80,21 @@ export default function ClientDashboard() {
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1, paddingTop: 50, backgroundColor: "#f3f4f6" },
+  header: {
+    paddingTop: 60,
+    paddingBottom: 16,
+    paddingHorizontal: 24,
+    backgroundColor: "white",
+    borderBottomWidth: 3,
+    borderBottomColor: "#e63946",
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1e293b",
+  },
+  background: { flex: 1, backgroundColor: "#f3f4f6" },
   container: { alignItems: "center", paddingBottom: 50 },
   loadingContainer: {
     flex: 1,
