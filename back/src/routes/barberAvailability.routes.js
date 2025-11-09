@@ -18,18 +18,15 @@ router.route("/:barberId/available-slots").get(getAvailableSlots);
 router.route("/:barberId/availability").get(getBarberAvailability);
 
 // Private routes for authenticated barbers to manage their own availability
+// SIMPLIFICADO: Se unifican las rutas GET, POST y PUT bajo /availability
 router
-  .route("/barber/availability")
+  .route("/availability")
   .get(
     authenticateUser,
     authorize(["barber"]),
     getAuthenticatedBarberAvailability
   )
-  .post(authenticateUser, authorize(["barber"]), createBarberAvailability);
-
-router
-  .route("/barber/availability/:id")
-  .put(authenticateUser, authorize(["barber"]), updateBarberAvailability)
-  .delete(authenticateUser, authorize(["barber"]), deleteBarberAvailability);
+  .post(authenticateUser, authorize(["barber"]), createBarberAvailability)
+  .put(authenticateUser, authorize(["barber"]), updateBarberAvailability); // Se mueve PUT aquí
 
 export default router;

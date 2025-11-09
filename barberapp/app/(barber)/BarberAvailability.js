@@ -113,19 +113,33 @@ export default function BarberAvailabilityScreen() {
     // --- END OF VALIDATION ---
 
     try {
-      const updatedProfileData = {
-        ...profile,
-        extra_data: {
-          ...profile.extra_data,
-          availability: barberAvailability,
-        },
+      const url = "/api/barbers/availability";
+      const payload = {
+        availability: barberAvailability,
+        blocked_dates: profile?.extra_data?.blocked_dates, // Enviar las fechas bloqueadas actuales para no perderlas
       };
-      await api.put("/api/profile", updatedProfileData, {
+
+      console.log(
+        `[FRONTEND] 📤 Guardando Horarios. Enviando datos a: PUT ${url}`
+      );
+      console.log(
+        "[FRONTEND] 📦 Datos a guardar:",
+        JSON.stringify(payload, null, 2)
+      );
+
+      await api.put(url, payload, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      setProfile(updatedProfileData); // Update local store
+
+      // Actualizamos el perfil en el store local para reflejar los cambios
+      setProfile({
+        ...profile,
+        extra_data: { ...profile.extra_data, ...payload },
+      });
+
       Alert.alert("Éxito", "Tu disponibilidad ha sido guardada.");
     } catch (error) {
+      console.error("[FRONTEND] 💥 Error al guardar la disponibilidad:", error.response?.data || error.message);
       Alert.alert("Error", "No se pudo guardar tu disponibilidad.");
     } finally {
       setSaving(false);

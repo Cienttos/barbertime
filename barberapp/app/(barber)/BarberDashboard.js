@@ -9,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useSessionStore } from "../../store/sessionStore";
 import api from "../../utils/api";
@@ -16,14 +17,18 @@ import { DateTime } from "luxon";
 
 import Header from "../../components/client/Header"; // Esta ruta ya es correcta
 
-const DashboardCard = ({ title, icon, screen }) => {
+const DashboardCard = ({ title, icon, screen, iconFamily = "Ionicons" }) => {
   const router = useRouter();
   return (
     <Pressable
       onPress={() => router.push(screen)}
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
     >
-      <Ionicons name={icon} size={28} color="#0052cc" />
+      {iconFamily === "MaterialCommunityIcons" ? (
+        <MaterialCommunityIcons name={icon} size={28} color="#0052cc" />
+      ) : (
+        <Ionicons name={icon} size={28} color="#0052cc" />
+      )}
       <Text style={styles.cardText}>{title}</Text>
     </Pressable>
   );
@@ -52,13 +57,9 @@ export default function BarberDashboard() {
       setAppointmentsLoading(true);
       try {
         // Hacemos dos llamadas en paralelo para ser más eficientes
-        const appointmentsRes = await api.get(
-          `/api/appointments/barber/${profile.id}`,
-          {
-            // Ruta para obtener los turnos del barbero autenticado.
-            headers: { Authorization: `Bearer ${session.access_token}` },
-          }
-        );
+        const appointmentsRes = await api.get("/api/appointments/barber", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
         console.log(
           "[BarberDashboard] Appointments API response data:",
           appointmentsRes.data
@@ -151,24 +152,6 @@ export default function BarberDashboard() {
       <Header shopSettings={shopData.shopSettings} />
 
       <View style={styles.container}>
-        {shopData.shopSettings?.address && (
-          <Text style={styles.addressText}>
-            {shopData.shopSettings.address}
-          </Text>
-        )}
-
-        <View style={styles.divider} />
-
-        {/* Saludo y Resumen de Turnos del Barbero */}
-        <View style={styles.barberHeader}>
-          <Text style={styles.greetingTitle}>
-            ¡Hola, {profile?.full_name?.split(" ")[0] || "Barbero"}!
-          </Text>
-          <Text style={styles.greetingSubtitle}>
-            Aquí tienes un resumen de tu jornada.
-          </Text>
-        </View>
-
         <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>Turnos para hoy</Text>
           {appointmentsLoading ? (
@@ -181,17 +164,23 @@ export default function BarberDashboard() {
         {/* Accesos directos para el Barbero */}
         <View style={styles.cardsContainer}>
           <DashboardCard
-            title="Mis Turnos"
+            title="Turnos"
             icon="calendar-outline"
-            screen="/(tabs)/(barber)/appointments"
+            screen="/(barber)/BarberAppointments"
           />
           <DashboardCard
-            title="Mis Horarios"
+            title="Horarios"
             icon="time-outline"
-            screen="/(tabs)/(barber)/availability"
+            screen="/(barber)/BarberAvailability"
           />
           <DashboardCard
-            title="Mis Servicios"
+            title="Días Libres"
+            icon="calendar-remove-outline"
+            screen="/(barber)/MySchedule"
+            iconFamily="MaterialCommunityIcons"
+          />
+          <DashboardCard
+            title="Servicios"
             icon="cut-outline"
             screen="/(tabs)/(barber)/services"
           />
@@ -219,6 +208,11 @@ export default function BarberDashboard() {
             <Text style={styles.statLabel}>Calificación</Text>
           </View>
         </View>
+
+        <Pressable style={styles.outlineButton}>
+          <Text style={styles.outlineButtonText}>Ver más estadísticas</Text>
+          <Ionicons name="arrow-forward" size={16} color="#0052cc" />
+        </Pressable>
       </View>
     </ScrollView>
   );
@@ -232,57 +226,46 @@ const styles = StyleSheet.create({
   },
   container: {
     alignItems: "center",
-    paddingBottom: 50,
+    paddingBottom: 40,
     paddingHorizontal: 16,
-  },
-  barberHeader: {
-    width: "100%",
-    marginBottom: 20,
-    alignItems: "flex-start",
-  },
-  greetingTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#1f2937", // Texto oscuro sobre fondo claro
-  },
-  greetingSubtitle: {
-    fontSize: 16,
-    color: "#4b5563", // Gris oscuro
-    marginTop: 4,
+    marginTop: 16,
   },
   summaryCard: {
     backgroundColor: "#e63946", // Rojo
-    padding: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 16,
     width: "100%",
     marginBottom: 24,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   summaryTitle: {
     color: "white",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
   },
   summaryCount: {
     color: "white",
-    fontSize: 48,
+    fontSize: 36,
     fontWeight: "800",
-    marginTop: 4,
   },
   cardsContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    flexWrap: "wrap",
+    justifyContent: "space-around",
     width: "100%",
     marginBottom: 24,
   },
   card: {
     backgroundColor: "white",
-    padding: 16,
+    paddingVertical: 20,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
-    marginHorizontal: 6,
+    width: "46%", // Para que quepan 2 por fila con un margen
+    marginBottom: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -314,12 +297,6 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     fontWeight: "600",
   },
-  addressText: {
-    fontSize: 16,
-    color: "#4b5563",
-    textAlign: "center",
-    marginTop: -10, // Adjust to be closer to the header
-  },
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -350,5 +327,21 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: "center",
     fontWeight: "500",
+  },
+  outlineButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 1.5,
+    borderColor: "#0052cc",
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginTop: 16,
+  },
+  outlineButtonText: {
+    color: "#0052cc",
+    fontWeight: "600",
   },
 });

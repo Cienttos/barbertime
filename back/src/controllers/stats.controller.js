@@ -71,35 +71,39 @@ export const getUserStats = async (req, res) => {
 export const getAdminStats = async (req, res) => {
   console.log("🔥 getAdminStats function hit!");
   try {
-    // Total Users
-    const { count: totalUsers, error: usersError } = await supabaseAdmin
-      .from("profiles")
-      .select("*", { count: "exact" });
+    // Run all count queries in parallel for better performance
+    const [
+      { count: totalUsers, error: usersError },
+      { count: totalBarbers, error: barbersError },
+      { count: totalAppointments, error: appointmentsError },
+      { count: totalServices, error: servicesError },
+    ] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select("id", { count: "exact", head: true }),
+      supabaseAdmin
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "barber"),
+      supabaseAdmin
+        .from("appointments")
+        .select("id", { count: "exact", head: true }),
+      supabaseAdmin
+        .from("services")
+        .select("id", { count: "exact", head: true }),
+    ]);
+
+    // Check for any errors from the parallel queries
     if (usersError) throw usersError;
-
-    // Total Barbers
-    const { count: totalBarbers, error: barbersError } = await supabaseAdmin
-      .from("profiles")
-      .select("*", { count: "exact" })
-      .eq("role", "barber");
     if (barbersError) throw barbersError;
-
-    // Total Appointments
-    const { count: totalAppointments, error: appointmentsError } =
-      await supabaseAdmin.from("appointments").select("*", { count: "exact" });
     if (appointmentsError) throw appointmentsError;
-
-    // Total Services
-    const { count: totalServices, error: servicesError } = await supabaseAdmin
-      .from("services")
-      .select("*", { count: "exact" });
     if (servicesError) throw servicesError;
 
     res.status(200).json({
-      totalUsers,
-      totalBarbers,
-      totalAppointments,
-      totalServices,
+      totalUsers: totalUsers ?? 0,
+      totalBarbers: totalBarbers ?? 0,
+      totalAppointments: totalAppointments ?? 0,
+      totalServices: totalServices ?? 0,
     });
   } catch (error) {
     console.error("Error fetching admin stats:", error.message);

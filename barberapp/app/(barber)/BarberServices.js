@@ -54,19 +54,34 @@ export default function BarberServicesScreen() {
   const handleSaveChanges = async () => {
     setSaving(true);
     try {
-      const updatedProfileData = {
-        ...profile,
+      const payload = {
+        ...profile, // Enviamos el perfil completo
         extra_data: {
           ...profile.extra_data,
           offered_services: offeredServices,
         },
       };
-      await api.put("/api/profile", updatedProfileData, {
+      const url = "/api/profile"; // Esta ruta actualiza el perfil completo
+
+      console.log(
+        `[FRONTEND] 📤 Guardando Servicios. Enviando datos a: PUT ${url}`
+      );
+      console.log(
+        "[FRONTEND] 📦 Datos a guardar:",
+        JSON.stringify({ offered_services: offeredServices }, null, 2)
+      );
+
+      await api.put(url, payload, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      setProfile(updatedProfileData); // Update local store
+
+      setProfile(payload); // Actualizamos el perfil en el store local
       Alert.alert("Éxito", "Tus servicios han sido actualizados.");
     } catch (error) {
+      console.error(
+        "[FRONTEND] 💥 Error al guardar los servicios:",
+        error.response?.data || error.message
+      );
       Alert.alert("Error", "No se pudieron guardar los cambios.");
     } finally {
       setSaving(false);

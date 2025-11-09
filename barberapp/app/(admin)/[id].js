@@ -255,6 +255,16 @@ export default function UserDetailScreen() {
               <Text style={styles.buttonText}>Guardar Rol</Text>
             )}
           </Pressable>
+          <Pressable
+            onPress={() => router.push("/(admin)/AdminUsers")}
+            style={({ pressed }) => [
+              styles.button,
+              styles.exitButton,
+              pressed && styles.exitButtonPressed,
+            ]}
+          >
+            <Text style={styles.buttonText}>Salir</Text>
+          </Pressable>
         </View>
       </ScrollView>
       {selectedAppointment && (
@@ -402,6 +412,13 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
     fontSize: 18,
+  },
+  exitButton: {
+    backgroundColor: "#e63946", // Color rojo
+    marginTop: 12,
+  },
+  exitButtonPressed: {
+    backgroundColor: "#c12a38", // Un rojo más oscuro al presionar
   },
   statsGrid: {
     flexDirection: "row",

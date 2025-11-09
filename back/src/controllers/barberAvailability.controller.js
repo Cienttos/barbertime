@@ -217,35 +217,63 @@ export const createBarberAvailability = async (req, res) => {
 // @desc    Update availability for the authenticated barber
 // @route   PUT /api/barber/availability/:id
 // @access  Private/Barber
-// TODO: Rewrite this function to work with the new JSONB data structure in the 'profiles' table.
 export const updateBarberAvailability = async (req, res) => {
-  res.status(501).json({ message: "Not Implemented" });
-  /*
-  const { id } = req.params;
-  const barberId = req.user.id;
-  const { day_of_week, start_time, end_time } = req.body;
-
+  console.log("\n[BACKEND] 🚀 Endpoint updateBarberAvailability alcanzado.");
   try {
-    const { data, error } = await supabaseAdmin
-      .from("barber_availability")
-      .update({ day_of_week, start_time, end_time })
-      .eq("id", id)
-      .eq("barber_id", barberId) // Ensure barber can only update their own availability
-      .select();
+    const barberId = req.user.id;
+    // El payload puede contener 'availability' y/o 'blocked_dates'
+    const { availability, blocked_dates } = req.body;
 
-    if (error) throw error;
+    console.log(`[BACKEND] 🧔 ID del barbero: ${barberId}`);
+    console.log(
+      `[BACKEND] 📥 Datos recibidos en req.body:`,
+      JSON.stringify(req.body, null, 2)
+    );
 
-    if (data.length === 0) {
+    if (!availability && !blocked_dates) {
+      console.log(
+        "[BACKEND] ⚠️ No se proporcionaron datos de 'availability' ni 'blocked_dates'."
+      );
       return res
-        .status(404)
-        .json({ message: "Availability entry not found or not authorized" });
+        .status(400)
+        .json({ message: "No availability or blocked dates data provided." });
     }
 
-    res.status(200).json(data[0]);
+    console.log("[BACKEND] 🔄 Obteniendo extra_data actual del perfil...");
+    const { data: profile, error: fetchError } = await supabaseAdmin
+      .from("profiles")
+      .select("extra_data")
+      .eq("id", barberId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    console.log("[BACKEND] 📄 extra_data actual:", profile.extra_data);
+
+    const newExtraData = {
+      ...profile.extra_data,
+      availability: availability ?? profile.extra_data?.availability,
+      blocked_dates: blocked_dates ?? profile.extra_data?.blocked_dates,
+    };
+
+    console.log("[BACKEND] ✨ Nuevos extra_data a guardar:", newExtraData);
+    console.log("[BACKEND] ⏳ Actualizando perfil en la base de datos...");
+    const { error: updateError } = await supabaseAdmin
+      .from("profiles")
+      .update({ extra_data: newExtraData })
+      .eq("id", barberId);
+
+    if (updateError) throw updateError;
+
+    console.log("[BACKEND] ✅ Horario actualizado con éxito.");
+    res.status(200).json({ message: "Schedule updated successfully." });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(
+      "[BACKEND] 💥 Error al actualizar el horario:",
+      error.message
+    );
+    res.status(500).json({ message: "Failed to update schedule." });
   }
-  */
 };
 
 // @desc    Delete availability for the authenticated barber

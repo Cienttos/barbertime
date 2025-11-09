@@ -116,9 +116,13 @@ export default function AdminBarbershop() {
   };
 
   const addSocialMedia = () => {
+    // Se añade un id único temporal para solucionar el warning de la 'key' en la lista.
     setShopData((prev) => ({
       ...prev,
-      social_media: [...prev.social_media, { name: "", url: "" }],
+      social_media: [
+        ...prev.social_media,
+        { id: `new_${Date.now()}`, name: "", url: "" },
+      ],
     }));
     setTimeout(() => {
       socialMediaScrollRef.current?.scrollToEnd({ animated: true });
@@ -268,9 +272,10 @@ export default function AdminBarbershop() {
                 socialMediaScrollRef.current?.scrollToEnd({ animated: true })
               }
             >
+              {/* Se usa social.id como key para una identificación estable y única */}
               {shopData.social_media.map((social, index) => (
                 <SocialMediaCard
-                  key={index}
+                  key={social.id || `social-${index}`}
                   social={social}
                   index={index}
                   onSocialMediaChange={handleSocialMediaChange}
@@ -484,12 +489,28 @@ const SocialMediaCard = ({
   onRemoveSocialMedia,
 }) => {
   const getSocialIcon = (name) => {
-    const lowerCaseName = name.toLowerCase();
-    if (lowerCaseName.includes("instagram")) return "instagram";
-    if (lowerCaseName.includes("facebook")) return "facebook";
-    if (lowerCaseName.includes("twitter")) return "twitter";
-    if (lowerCaseName.includes("tiktok")) return "tiktok";
-    return "web";
+    const lowerCaseName = (name || "").toLowerCase();
+    const lowerCaseUrl = (social.url || "").toLowerCase();
+
+    if (
+      lowerCaseName.includes("instagram") ||
+      lowerCaseUrl.includes("instagram.com")
+    )
+      return "instagram";
+    if (
+      lowerCaseName.includes("facebook") ||
+      lowerCaseUrl.includes("facebook.com")
+    )
+      return "facebook";
+    if (
+      lowerCaseName.includes("twitter") ||
+      lowerCaseUrl.includes("twitter.com") ||
+      lowerCaseUrl.includes("x.com")
+    )
+      return "twitter";
+    if (lowerCaseName.includes("tiktok") || lowerCaseUrl.includes("tiktok.com"))
+      return "tiktok";
+    return "link-variant"; // Un ícono más genérico para enlaces
   };
 
   return (

@@ -28,11 +28,11 @@ export const getProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const user = req.user;
-    const { full_name, phone_number, avatar_url } = req.body;
+    const { full_name, phone_number, avatar_url, extra_data } = req.body;
 
     const { data: profile, error } = await supabaseAdmin
       .from("profiles")
-      .update({ full_name, phone_number, avatar_url })
+      .update({ full_name, phone_number, avatar_url, extra_data })
       .eq("id", user.id)
       .select()
       .single();
@@ -59,11 +59,17 @@ export const updateAvatar = async (req, res) => {
       console.error("❌ [updateAvatar] No se recibió ningún archivo.");
       return res.status(400).json({ error: "No se subió ningún archivo." });
     }
-    console.log("📄 [updateAvatar] Archivo recibido (req.file):", { originalname: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size });
+    console.log("📄 [updateAvatar] Archivo recibido (req.file):", {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
 
     // 2. Usar `sharp` para procesar la imagen: redimensionar y convertir a formato WebP.
     // Esto optimiza la imagen para la web.
-    console.log("⏳ [updateAvatar] Redimensionando y convirtiendo imagen a webp...");
+    console.log(
+      "⏳ [updateAvatar] Redimensionando y convirtiendo imagen a webp..."
+    );
     const resizedImageBuffer = await sharp(req.file.buffer)
       .resize(200, 200, { fit: "cover" })
       .webp({ quality: 80 })
@@ -76,7 +82,9 @@ export const updateAvatar = async (req, res) => {
     const contentType = "image/webp";
 
     // 4. Subir el buffer de la imagen procesada a Supabase Storage.
-    console.log(`⏳ [updateAvatar] Subiendo avatar a Supabase Storage en: ${filePath}`);
+    console.log(
+      `⏳ [updateAvatar] Subiendo avatar a Supabase Storage en: ${filePath}`
+    );
     const { error: uploadError } = await supabaseAdmin.storage
       .from("avatars") // El nombre del bucket es "avatars"
       .upload(filePath, resizedImageBuffer, {
@@ -88,20 +96,21 @@ export const updateAvatar = async (req, res) => {
       console.error("❌ [updateAvatar] Supabase upload error:", uploadError);
       throw uploadError;
     }
-    console.log("✅ [updateAvatar] Avatar subido a Supabase Storage con éxito.");
+    console.log(
+      "✅ [updateAvatar] Avatar subido a Supabase Storage con éxito."
+    );
 
     // 5. Obtener la URL pública del archivo recién subido.
     const { data: publicUrlData } = supabaseAdmin.storage
       .from("avatars")
       .getPublicUrl(filePath);
-      
+
     // Se añade un timestamp a la URL para evitar problemas de caché en el cliente.
     const avatar_url = `${publicUrlData.publicUrl}?t=${new Date().getTime()}`;
 
     // 6. Devolver la URL pública al cliente.
     // El frontend usará esta URL para actualizar el perfil del usuario en un paso posterior.
     res.status(200).json({ message: "Avatar subido con éxito", avatar_url });
-
   } catch (error) {
     console.error("💥 [updateAvatar] Error en el servidor:", error.message);
     res

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useSessionStore } from "../../store/sessionStore";
 import api from "../../utils/api";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -25,28 +25,30 @@ export default function UsersManagementScreen() {
   const [filter, setFilter] = useState("Todos"); // Todos, Clientes, Barberos, Admins
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    if (session) {
-      fetchUsers();
-    }
-  }, [session]);
-
   const fetchUsers = async () => {
-    setLoading(true);
+    // No need to set loading to true here if we want a silent refresh
     try {
       const usersRes = await api.get("/api/admin/users", {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      console.log("Raw Users API Response:", usersRes.data);
       setUsers(usersRes.data);
-      console.log("Updated Users State:", usersRes.data);
     } catch (error) {
       Alert.alert("Error", "No se pudieron cargar los usuarios.");
       console.error("Error fetching users:", error);
     } finally {
-      setLoading(false);
+      setLoading(false); // Ensure loading is false after fetch
     }
   };
+
+  // Use useFocusEffect to refetch data every time the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (session) {
+        setLoading(true); // Set loading to true when we focus and fetch
+        fetchUsers();
+      }
+    }, [session])
+  );
 
   const filteredUsers = useMemo(() => {
     let filtered = users;

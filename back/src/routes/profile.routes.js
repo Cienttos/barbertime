@@ -5,7 +5,7 @@ import {
   updateAvatar,
   upload,
 } from "../controllers/profile.controller.js";
-import { authenticateUser } from "../middleware/auth.middleware.js";
+import { authenticateUser, authorize } from "../middleware/auth.middleware.js";
 
 const router = Router();
 

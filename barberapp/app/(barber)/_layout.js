@@ -23,6 +23,14 @@ export default function BarberLayout() {
                 color={color}
               />
             );
+          } else if (route.name === "MySchedule") {
+            return (
+              <MaterialCommunityIcons
+                name="calendar-remove-outline"
+                size={size}
+                color={color}
+              />
+            );
           } else if (route.name === "BarberServices") {
             iconName = "cut-outline";
           } else if (route.name === "BarberProfile") {
@@ -39,6 +47,7 @@ export default function BarberLayout() {
         name="BarberAvailability"
         options={{ title: "Disponibilidad" }}
       />
+      <Tabs.Screen name="MySchedule" options={{ title: "Días Libres" }} />
       <Tabs.Screen name="BarberServices" options={{ title: "Servicios" }} />
       <Tabs.Screen name="BarberProfile" options={{ title: "Perfil" }} />
     </Tabs>
