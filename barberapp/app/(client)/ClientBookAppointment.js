@@ -13,9 +13,9 @@ import {
 import { BlurView } from "expo-blur";
 import { useSessionStore } from "../../store/sessionStore";
 import api from "../../utils/api";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRouter, useFocusEffect } from "expo-router";
 import { LocaleConfig } from "react-native-calendars";
 import { DateTime } from "luxon";
 
@@ -111,13 +111,14 @@ export default function BookAppointmentScreen() {
     setIsCalendarVisible(true);
   };
 
-  useEffect(() => {
-    // Usamos useFocusEffect para reiniciar el estado si el usuario vuelve a esta pantalla
-    const unsubscribe = router.addListener("focus", () => {
-      resetBookingState();
-    });
-    return unsubscribe;
-  }, [session]);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (session) {
+        resetBookingState();
+        fetchData();
+      }
+    }, [session])
+  );
 
   useEffect(() => {
     // Update current time every minute
@@ -232,8 +233,7 @@ export default function BookAppointmentScreen() {
         {
           text: "OK",
           onPress: () => {
-            resetBookingState();
-            router.replace("/(tabs)/my-appointments");
+            router.replace("/ClientMyAppointments");
           },
         },
       ]);
@@ -249,7 +249,7 @@ export default function BookAppointmentScreen() {
 
   const filteredBarbers = selectedService
     ? barbers.filter((b) =>
-        b.extra_data?.offered_services?.includes(selectedService.id)
+        b.extra_data?.services?.includes(selectedService.id)
       )
     : [];
 

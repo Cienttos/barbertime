@@ -1,17 +1,26 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+const palette = {
+  primary: "#0052cc",
+  secondary: "#e63946",
+  gray: "gray",
+};
+
 export default function ClientLayout() {
   return (
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: "#e63946", // Rojo para activo
-        tabBarInactiveTintColor: "gray",
+        tabBarActiveTintColor: palette.primary, // Azul para activo, para que el rojo de Reservar destaque
+        tabBarInactiveTintColor: palette.gray,
         tabBarIcon: ({ color, size }) => {
           let iconName;
+
           if (route.name === "ClientDashboard") {
             iconName = "home-outline";
+          } else if (route.name === "ClientBookAppointment") {
+            iconName = "add-circle-outline";
           } else if (route.name === "ClientMyAppointments") {
             iconName = "calendar-outline";
           } else if (route.name === "ClientProfile") {
@@ -22,7 +31,10 @@ export default function ClientLayout() {
       })}
     >
       <Tabs.Screen name="ClientDashboard" options={{ title: "Inicio" }} />
-      <Tabs.Screen name="ClientBookAppointment" options={{ href: null }} />
+      <Tabs.Screen
+        name="ClientBookAppointment"
+        options={{ title: "Reservar" }}
+      />
       <Tabs.Screen
         name="ClientMyAppointments"
         options={{ title: "Mis Turnos" }}
